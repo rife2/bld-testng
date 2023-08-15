@@ -54,6 +54,7 @@ public class TestNgOperationBuild extends Project {
         javadocOperation()
                 .javadocOptions()
                 .docLint(NO_MISSING)
+                .link("https://rife2.github.io/bld/")
                 .link("https://rife2.github.io/rife2/");
 
         publishOperation()
