@@ -76,13 +76,24 @@ class TestNgOperationTest {
     void testExecute() {
         assertThatThrownBy(() ->
                 new TestNgOperation().fromProject(new Project())
-                        .testClass("rife.bld.extension.TestNGSimpleTest")
+                        .testClass("rife.bld.extension.TestNgSimpleTest")
+                        .execute()).isInstanceOf(ExitStatusException.class);
+
+        assertThatThrownBy(() ->
+                new TestNgOperation().fromProject(new Project())
+                        .suites("src/test/resources/testng.xml")
                         .execute()).isInstanceOf(ExitStatusException.class);
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
-                        .testClass("rife.bld.extension.TestNGSimpleTest")
-                        .methods("rife.bld.extension.TestNGSimpleTest.verifyHello")
+                        .testClass("rife.bld.extension.TestNgSimpleTest")
+                        .methods("rife.bld.extension.TestNgSimpleTest.verifyHello")
+                        .execute())
+                .doesNotThrowAnyException();
+
+        assertThatCode(() ->
+                new TestNgOperation().fromProject(new Project())
+                        .suites("src/test/resources/testng2.xml")
                         .execute())
                 .doesNotThrowAnyException();
     }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="test suite 1" verbose="2" >
+  <test name="simple test" >
+  <classes>
+      <class name="rife.bld.extension.TestNgSimpleTest" />
+   </classes>
+ </test>
+</suite>

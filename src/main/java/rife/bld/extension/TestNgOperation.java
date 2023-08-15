@@ -130,7 +130,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
             try {
                 var temp = tempFile();
                 try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
-                    bufWriter.write("<suite name=\"bld Default Suite\" verbose=\"2\"><test name=\"All Packages\"><packages>");
+                    bufWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                            "<suite name=\"bld Default Suite\" verbose=\"2\">" +
+                            "<test name=\"All Packages\"><packages>");
                     for (var p : packages) {
                         bufWriter.write(String.format("<package name=\"%s\"/>", p));
                     }

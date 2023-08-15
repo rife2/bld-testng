@@ -20,14 +20,14 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * Implements the TestNGSimpleTest class.
+ * Implements the TestNgSimpleTest class.
  *
  * @author <a href="https://erik.thauvin.net/">Erik C. Thauvin</a>
  * @since 1.0
  */
-class TestNGSimpleTest {
+class TestNgSimpleTest {
     public static void main(String[] args) {
-        new TestNGSimpleTest().verifyHello();
+        new TestNgSimpleTest().verifyHello();
     }
 
     @Test

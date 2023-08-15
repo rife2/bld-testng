@@ -1,0 +1,12 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<suite name="test suite 2" verbose="1" >
+    <test name="exclude fail" >
+        <classes>
+            <class name="rife.bld.extension.TestNgSimpleTest">
+                <methods>
+                    <exclude name="testFail" />
+                </methods>
+            </class>
+        </classes>
+    </test>
+</suite>
