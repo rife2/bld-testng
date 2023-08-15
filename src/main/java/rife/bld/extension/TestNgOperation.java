@@ -206,7 +206,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Specified the JUnit mode. Default is {@code false}.
+     * Enables or disables the JUnit mode. Default is {@code false}.
      */
     public TestNgOperation jUnit(Boolean isJunit) {
         options.put("-junit", String.valueOf(isJunit));
@@ -269,6 +269,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     /**
      * The list of packages to include in this test. For example: {@code "com.example", "test.sample.*"}
      * If the package name ends with .* then subpackages are included too.
+     * Required if no {@link #suites(String...)}
+     * specified.
      */
     public TestNgOperation packages(String... name) {
         packages.addAll(Arrays.stream(name).toList());
@@ -339,6 +341,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Specifies the size of the thread pool to use to run suites.
+     * Required if no {@link #packages(String...)} specified.
      */
     public TestNgOperation suiteThreadPoolSize(int poolSize) {
         options.put("-suitethreadpoolsize", String.valueOf(poolSize));
