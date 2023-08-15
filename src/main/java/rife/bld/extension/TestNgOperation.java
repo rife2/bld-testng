@@ -156,8 +156,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Lets you specify method selectors on the command line.
      * For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}
      */
-    public TestNgOperation methodSelectors(String... detector) {
-        options.put("-methodselectors", String.join(",", detector));
+    public TestNgOperation methodSelectors(String... selector) {
+        options.put("-methodselectors", String.join(",", selector));
         return this;
     }
 
