@@ -3,6 +3,7 @@
   <component name="EntryPointsManager">
     <pattern value="rife.bld.extension.TestNgOperationBuild" method="pmd" />
     <pattern value="rife.bld.extension.TestNgOperationBuild" />
+    <pattern value="rife.bld.extension.TestNGSimpleTest" method="testFail" />
   </component>
   <component name="PDMPlugin">
     <option name="customRuleSets">

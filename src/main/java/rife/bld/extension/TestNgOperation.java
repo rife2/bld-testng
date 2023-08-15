@@ -40,11 +40,28 @@ import java.util.stream.Collectors;
 public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     public static final String TEST_CLASS_ARG = "-testclass";
     private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
+    /**
+     * The run options.
+     */
+    protected final Map<String, String> options = new ConcurrentHashMap<>();
+    /**
+     * The suite packages to run.
+     */
+    protected final List<String> packages = new ArrayList<>();
+    /**
+     * THe suites to run.
+     */
+    protected final List<String> suites = new ArrayList<>();
     private final List<String> args = new ArrayList<>();
-    private final Map<String, String> options = new ConcurrentHashMap<>();
-    private final List<String> packages = new ArrayList<>();
-    private final List<String> suites = new ArrayList<>();
     private BaseProject project;
+
+    /**
+     * Should MethodInvocation Listeners be run even for skipped methods. Default is {@code true}.
+     */
+    public TestNgOperation alwaysRunListeners(Boolean isAlwaysRunListeners) {
+        options.put("-alwaysrunlisteners", String.valueOf(isAlwaysRunListeners));
+        return this;
+    }
 
     /**
      * This sets the default maximum number of threads to use for data providers when running tests in parallel.
@@ -53,6 +70,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      */
     public TestNgOperation dataProviderThreadCount(int count) {
         options.put("-dataproviderthreadcount", String.valueOf(count));
+        return this;
+    }
+
+    /**
+     * The dependency injector factory implementation that TestNG should use.
+     */
+    public TestNgOperation dependencyInjectorFactory(String injectorFactory) {
+        options.put("-dependencyinjectorfactory", injectorFactory);
         return this;
     }
 
@@ -73,17 +98,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Part of the {@link #execute} operation, constructs the command list
-     * to use for building the process.
-     *
-     * @since 1.5
+     * Part of the {@link #execute} operation, constructs the command list to use for building the process.
      */
     @Override
     protected List<String> executeConstructProcessCommandList() {
         if (project == null) {
             LOGGER.severe("A project must be specified.");
         } else if (packages.isEmpty() && suites.isEmpty()) {
-            LOGGER.severe("At least one suite or package is required.");
+            LOGGER.severe("At least one package or XML suite is required.");
         }
 
         if (!options.containsKey("-d")) {
@@ -102,7 +124,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
             args.add(v);
         });
 
-        if (!options.containsKey(TEST_CLASS_ARG)) {
+        if (!suites.isEmpty()) {
+            args.addAll(suites);
+        } else if (!options.containsKey(TEST_CLASS_ARG)) {
             try {
                 var temp = tempFile();
                 try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
@@ -137,10 +161,19 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Whether TestNG should continue to execute the remaining tests in the suite or skip them if an @Before* method
+     * Whether TestNG should continue to execute the remaining tests in the suite or skip them if in a {@code @Before*}
+     * method.
      */
     public TestNgOperation failurePolicy(FailurePolicy policy) {
         options.put("-configfailurepolicy", policy.name().toLowerCase(Locale.getDefault()));
+        return this;
+    }
+
+    /**
+     * Should TestNG consider failures in Data Providers as test failures. Default is {@code false}.
+     */
+    public TestNgOperation generateResultsPerSuite(Boolean resultsPerSuite) {
+        options.put("-generateResultsPerSuite", String.valueOf(resultsPerSuite));
         return this;
     }
 
@@ -149,6 +182,41 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      */
     public TestNgOperation groups(String... group) {
         options.put("-groups", String.join(",", group));
+        return this;
+    }
+
+    /**
+     * Ignore missed test names given by '-testnames' and continue to run existing tests, if any.
+     * Default is {@code false}.
+     */
+    public TestNgOperation ignoreMissedTestName(Boolean isIgnoreMissedTestNames) {
+        options.put("-ignoreMissedTestNames", String.valueOf(isIgnoreMissedTestNames));
+        return this;
+    }
+
+    /**
+     * Should TestNG report all iterations of a data driven test as individual skips, in-case of upstream failures.
+     * Default is {@code false}.
+     */
+    public TestNgOperation includeAllDataDrivenTestsWhenSkipping(Boolean isIncludeDrivenTestsWhenSkipping) {
+        options.put("-includeAllDataDrivenTestsWhenSkipping", String.valueOf(isIncludeDrivenTestsWhenSkipping));
+        return this;
+    }
+
+    /**
+     * Specified the JUnit mode. Default is {@code false}.
+     */
+    public TestNgOperation jUnit(Boolean isJunit) {
+        options.put("-junit", String.valueOf(isJunit));
+        return this;
+    }
+
+    /**
+     * The list of {@code .class} files or list of class names implementing {@code ITestListener} or
+     * {@code ISuiteListener}
+     */
+    public TestNgOperation listener(String... listener) {
+        options.put("-listener", String.join(",", listener));
         return this;
     }
 
@@ -170,8 +238,30 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
         return this;
     }
 
-    protected Map<String, String> options() {
-        return options;
+    /**
+     * Mixed mode autodetects the type of current test and run it with appropriate runner.
+     * Default is {@code false}
+     */
+    public TestNgOperation mixed(Boolean isMixed) {
+        options.put("-mixed", String.valueOf(isMixed));
+        return this;
+    }
+
+    /**
+     * The list of {@code .class} files or list of class names implementing {@code ITestRunnerFactory}.
+     */
+    public TestNgOperation objectFactory(String... factory) {
+        options.put("-objectfactory", String.join(",", factory));
+        return this;
+    }
+
+    /**
+     * The list of fully qualified class names of listeners that should be skipped from being wired in via
+     * Service Loaders.
+     */
+    public TestNgOperation overrideIncludedMethods(String... method) {
+        options.put("-overrideincludedmethods", String.join(",", method));
+        return this;
     }
 
     /**
@@ -195,12 +285,44 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * Specifies the port number.
+     */
+    public TestNgOperation port(int port) {
+        options.put("-port", String.valueOf(port));
+        return this;
+    }
+
+    /**
+     * Should TestNG consider failures in Data Providers  as test failures. Default is {@code false}.
+     */
+    public TestNgOperation propagateDataProviderFailureAsTestFailure(Boolean isPropagateDataProviderFailure) {
+        options.put("-propagateDataProviderFailureAsTestFailure", String.valueOf(isPropagateDataProviderFailure));
+        return this;
+    }
+
+    /**
+     * Specifies the extended configuration for custom report listener.
+     */
+    public TestNgOperation reporter(String reporter) {
+        options.put("-reporter", reporter);
+        return this;
+    }
+
+    /**
      * The directories where your javadoc annotated test sources are. This option is only necessary
      * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      */
     public TestNgOperation sourceDir(String... directory) {
         options.put("-sourcedir", String.join(";", directory));
+        return this;
+    }
+
+    /**
+     * List fully qualified class names of listeners that should be skipped from being wired in via Service Loaders.
+     */
+    public TestNgOperation spiListenersToSkip(String... listenerToSkip) {
+        options.put("-spilistenerstoskip", String.join(",", listenerToSkip));
         return this;
     }
 
@@ -214,10 +336,19 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * Specifies the size of the thread pool to use to run suites.
+     */
+    public TestNgOperation suiteThreadPoolSize(int poolSize) {
+        options.put("-suitethreadpoolsize", String.valueOf(poolSize));
+        return this;
+    }
+
+    /**
      * Specifies the suites to run. For example: {@code "testng.xml", "testng2.xml"}
      */
-    public void suites(String... suite) {
+    public TestNgOperation suites(String... suite) {
         suites.addAll(Arrays.stream(suite).toList());
+        return this;
     }
 
     private File tempFile() throws IOException {
@@ -261,6 +392,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * Specifies the factory used to create tests.
+     */
+    public TestNgOperation testRunFactory(String factory) {
+        options.put("-testrunfactory", factory);
+        return this;
+    }
+
+    /**
      * This sets the default maximum number of threads to use for running tests in parallel. It will only take effect
      * if the parallel mode has been selected (for example, with the -parallel option). This can be overridden in the
      * suite definition.
@@ -271,8 +410,24 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * Specifies the thread pool executor factory implementation that TestNG should use.
+     */
+    public TestNgOperation threadPoolFactoryClass(String factoryClass) {
+        options.put("-threadpoolfactoryclass", factoryClass);
+        return this;
+    }
+
+    /**
+     * Whether to use the default listeners. Default is {@code true}.
+     */
+    public TestNgOperation useDefaultListeners(Boolean isDefaultListener) {
+        options.put("-usedefaultlisteners", String.valueOf(isDefaultListener));
+        return this;
+    }
+
+    /**
      * This attribute should contain the path to a valid XML file inside the test jar
-     * (e.g. {@code "resources/testng.xml"|). The default is {@code testng.xml}, which means a file called
+     * (e.g. {@code "resources/testng.xml"}). The default is {@code testng.xml}, which means a file called
      * {@code testng.xml} at the root of the jar file. This option will be ignored unless a test jar is specified.
      */
     public TestNgOperation xmlPathInJar(String path) {
