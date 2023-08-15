@@ -221,7 +221,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Lets you specify method selectors on the command line.
+     * Specifies list of {@code .class} files or list of class names implementing {@code IMethodSelector{}
      * For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}
      */
     public TestNgOperation methodSelectors(String... selector) {
@@ -327,8 +327,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * This specifies the suite name for a test suite defined on the command line. This option is ignored if the
-     * suite.xml file or the source code specifies a different suite name.
+     * This specifies the default name of test suite, if not specified in suite definition file or source code.
+     * This option is ignored if the {@code suite.xml} file or the source code specifies a different suite name.
      */
     public TestNgOperation suiteName(String name) {
         options.put("-suitename", '"' + name + '"');
@@ -375,8 +375,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * This specifies the name for a test defined on the command line. This option is ignored if the suite.xml file or
-     * the source code specifies a different test name.
+     * This specifies the default name of test, if not specified in suite definition file or source code.
+     * This option is ignored if the suite.xml file or the source code specifies a different test name.
      */
     public TestNgOperation testName(String name) {
         options.put("-testname", '"' + name + '"');
