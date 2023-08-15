@@ -4,9 +4,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 class ExampleTest {
-    @Test
-    void verifyHello() {
-        Assert.assertTrue(true);
+    public static void main(String[] args) {
+        new ExampleTest().verifyHello();
     }
 
     @Test
@@ -14,7 +13,8 @@ class ExampleTest {
         Assert.fail("failed");
     }
 
-    public static void main(String[] args) {
-        new ExampleTest().verifyHello();
+    @Test
+    void verifyHello() {
+        Assert.assertTrue(true);
     }
 }
