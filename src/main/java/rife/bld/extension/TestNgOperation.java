@@ -56,7 +56,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     private BaseProject project;
 
     /**
-     * Should MethodInvocation Listeners be run even for skipped methods. Default is {@code true}.
+     * Should Method Invocation Listeners be run even for skipped methods. Default is {@code true}.
      */
     public TestNgOperation alwaysRunListeners(Boolean isAlwaysRunListeners) {
         options.put("-alwaysrunlisteners", String.valueOf(isAlwaysRunListeners));
@@ -65,8 +65,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * This sets the default maximum number of threads to use for data providers when running tests in parallel.
-     * It will only take effect if the parallel mode has been selected (for example, with the parallel option).
-     * This can be overridden in the suite definition.
+     * It will only take effect if the parallel mode has been selected (for example,with the
+     * {@link #parallel(Parallel) parallel} option). This can be overridden in the suite definition.
      */
     public TestNgOperation dataProviderThreadCount(int count) {
         options.put("-dataproviderthreadcount", String.valueOf(count));
@@ -98,7 +98,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Part of the {@link #execute} operation, constructs the command list to use for building the process.
+     * Part of the {@link #execute execute} operation, constructs the command list to use for building the process.
      */
     @Override
     protected List<String> executeConstructProcessCommandList() {
@@ -153,7 +153,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Configures a PMD operation from a {@link BaseProject}.
+     * Configures the {@link BaseProject}.
      */
     @Override
     public TestNgOperation fromProject(BaseProject project) {
@@ -180,7 +180,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * The list of groups you want to run (e.g. "{@code "windows", "linux", "regression}").
+     * The list of groups you want to run.
+     * For example: {@code "windows", "linux", "regression}.
      */
     public TestNgOperation groups(String... group) {
         options.put("-groups", String.join(",", group));
@@ -188,8 +189,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Ignore missed test names given by '-testnames' and continue to run existing tests, if any.
-     * Default is {@code false}.
+     * Ignore missed test names given by {@link #testNames(String...) testNames} and continue to run existing tests,
+     * if any. Default is {@code false}.
      */
     public TestNgOperation ignoreMissedTestName(Boolean isIgnoreMissedTestNames) {
         options.put("-ignoreMissedTestNames", String.valueOf(isIgnoreMissedTestNames));
@@ -206,7 +207,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Enables or disables the JUnit mode. Default is {@code false}.
+     * Enables or disables the JUnit mode.
+     * Default is {@code false}.
      */
     public TestNgOperation jUnit(Boolean isJunit) {
         options.put("-junit", String.valueOf(isJunit));
@@ -223,7 +225,17 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Specifies list of {@code .class} files or list of class names implementing {@code IMethodSelector{}
+     * Set the Level of verbosity.
+     *
+     * @see #verbose(int)
+     */
+    public TestNgOperation log(int level) {
+        options.put("-log", String.valueOf(level));
+        return this;
+    }
+
+    /**
+     * Specifies the list of {@code .class} files or class names implementing {@code IMethodSelector}.
      * For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}
      */
     public TestNgOperation methodSelectors(String... selector) {
@@ -242,7 +254,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Mixed mode autodetects the type of current test and run it with appropriate runner.
-     * Default is {@code false}
+     * Default is {@code false}.
      */
     public TestNgOperation mixed(Boolean isMixed) {
         options.put("-mixed", String.valueOf(isMixed));
@@ -250,7 +262,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * The list of {@code .class} files or list of class names implementing {@code ITestRunnerFactory}.
+     * The list of {@code .class} files or class names implementing {@code ITestRunnerFactory}.
      */
     public TestNgOperation objectFactory(String... factory) {
         options.put("-objectfactory", String.join(",", factory));
@@ -267,10 +279,10 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * The list of packages to include in this test. For example: {@code "com.example", "test.sample.*"}
+     * The list of packages to include in this test.
+     * For example: {@code "com.example", "test.sample.*"}
      * If the package name ends with .* then subpackages are included too.
-     * Required if no {@link #suites(String...)}
-     * specified.
+     * Required if no {@link #suites(String... suites)} specified.
      */
     public TestNgOperation packages(String... name) {
         packages.addAll(Arrays.stream(name).toList());
@@ -281,8 +293,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * If specified, sets the default mechanism used to determine how to use parallel threads when running tests.
      * If not set, default mechanism is not to use parallel threads at all.
      * This can be overridden in the suite definition.
+     *
+     * @see Parallel
      */
-
     public TestNgOperation parallel(Parallel mechanism) {
         options.put("-parallel", mechanism.name().toLowerCase(Locale.getDefault()));
         return this;
@@ -297,7 +310,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Should TestNG consider failures in Data Providers  as test failures. Default is {@code false}.
+     * Should TestNG consider failures in Data Providers as test failures.
+     * Default is {@code false}.
      */
     public TestNgOperation propagateDataProviderFailureAsTestFailure(Boolean isPropagateDataProviderFailure) {
         options.put("-propagateDataProviderFailureAsTestFailure", String.valueOf(isPropagateDataProviderFailure));
@@ -323,7 +337,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * List fully qualified class names of listeners that should be skipped from being wired in via Service Loaders.
+     * Specifies the List of fully qualified class names of listeners that should be skipped from being wired in via
+     * Service Loaders.
      */
     public TestNgOperation spiListenersToSkip(String... listenerToSkip) {
         options.put("-spilistenerstoskip", String.join(",", listenerToSkip));
@@ -331,7 +346,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * This specifies the default name of test suite, if not specified in suite definition file or source code.
+     * This specifies the default name of the test suite, if not specified in the suite definition file or source code.
      * This option is ignored if the {@code suite.xml} file or the source code specifies a different suite name.
      */
     public TestNgOperation suiteName(String name) {
@@ -349,13 +364,16 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Specifies the suites to run. For example: {@code "testng.xml", "testng2.xml"}
+     * Specifies the suites to run. For example: {@code "testng.xml", "testng2.xml"}.
      */
     public TestNgOperation suites(String... suite) {
         suites.addAll(Arrays.stream(suite).toList());
         return this;
     }
 
+    /**
+     * Create a test file and delete it on exit.
+     */
     private File tempFile() throws IOException {
         var temp = File.createTempFile("testng", ".xml");
         temp.deleteOnExit();
@@ -363,7 +381,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * A list of class files separated by commas (e.g. {@code "org.foo.Test1","org.foo.test2"}).
+     * Specifies the list of class files. For example: {@code "org.foo.Test1","org.foo.test2"}.
      */
     public TestNgOperation testClass(String... aClass) {
         options.put("-testclass", String.join(",", aClass));
@@ -371,8 +389,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Specifies a jar file that contains test classes. If a testng.xml file is found at the root of that jar file,
-     * it will be used, otherwise, all the test classes found in this jar file will be considered test classes.
+     * Specifies a jar file that contains test classes. If a {@code testng.xml} file is found at the root of that
+     * jar file, it will be used, otherwise, all the test classes found in this jar file will be considered test
+     * classes.
      */
     public TestNgOperation testJar(String jar) {
         options.put("-testjar", jar);
@@ -380,8 +399,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * This specifies the default name of test, if not specified in suite definition file or source code.
-     * This option is ignored if the suite.xml file or the source code specifies a different test name.
+     * This specifies the default name of test, if not specified in the suite definition file or source code.
+     * This option is ignored if the {@code suite.xml} file or the source code specifies a different test name.
      */
     public TestNgOperation testName(String name) {
         options.put("-testname", '"' + name + '"');
@@ -406,8 +425,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * This sets the default maximum number of threads to use for running tests in parallel. It will only take effect
-     * if the parallel mode has been selected (for example, with the -parallel option). This can be overridden in the
-     * suite definition.
+     * if the parallel mode has been selected (for example, with the {@link #parallel(Parallel) parallel} option).
+     * This can be overridden in the suite definition.
      */
     public TestNgOperation threadCount(int count) {
         options.put("-threadcount", String.valueOf(count));
@@ -427,6 +446,16 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      */
     public TestNgOperation useDefaultListeners(Boolean isDefaultListener) {
         options.put("-usedefaultlisteners", String.valueOf(isDefaultListener));
+        return this;
+    }
+
+    /**
+     * Set the Level of verbosity.
+     *
+     * @see #log(int)
+     */
+    public TestNgOperation verbose(int level) {
+        options.put("-verbose", String.valueOf(level));
         return this;
     }
 

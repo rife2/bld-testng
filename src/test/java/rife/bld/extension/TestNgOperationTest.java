@@ -96,6 +96,13 @@ class TestNgOperationTest {
                         .suites("src/test/resources/testng2.xml")
                         .execute())
                 .doesNotThrowAnyException();
+
+        assertThatCode(() ->
+                new TestNgOperation().fromProject(new Project())
+                        .suites("src/test/resources/testng3.xml")
+                        .log(2)
+                        .execute())
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -300,6 +307,15 @@ class TestNgOperationTest {
 
         op = new TestNgOperation().useDefaultListeners(true);
         assertThat(op.options.get("-usedefaultlisteners")).isEqualTo("true");
+    }
+
+    @Test
+    void testVerbose() {
+        var op = new TestNgOperation().log(1);
+        assertThat(op.options.get("-log")).isEqualTo("1");
+
+        op = new TestNgOperation().verbose(1);
+        assertThat(op.options.get("-verbose")).isEqualTo("1");
     }
 
     @Test
