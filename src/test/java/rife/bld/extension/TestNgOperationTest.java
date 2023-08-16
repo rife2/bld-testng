@@ -17,7 +17,7 @@
 package rife.bld.extension;
 
 import org.junit.jupiter.api.Test;
-import rife.bld.Project;
+import rife.bld.Project; // NOPMD
 import rife.bld.operations.exceptions.ExitStatusException;
 
 import static org.assertj.core.api.Assertions.*;
