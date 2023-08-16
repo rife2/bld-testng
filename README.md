@@ -7,7 +7,9 @@
 [![Snapshot](https://flat.badgen.net/maven/v/metadata-url/repo.rife2.com/snapshots/com/uwyn/rife2/bld-testng/maven-metadata.xml?label=snapshot)](https://repo.rife2.com/#/snapshots/com/uwyn/rife2/bld-testng)
 [![GitHub CI](https://github.com/rife2/bld-testng/actions/workflows/bld.yml/badge.svg)](https://github.com/rife2/bld-testng/actions/workflows/bld.yml)
 
-To run the tests with TestNG:
+To install, please refer to the [extensions documentation](https://github.com/rife2/bld/wiki/Extensions).
+
+To run the tests with TestNG, add the following to your build file:
 
 ```java
 @BuildCommand(summary = "Run tests with TestNG")
