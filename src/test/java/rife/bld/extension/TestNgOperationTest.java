@@ -77,32 +77,42 @@ class TestNgOperationTest {
         assertThatThrownBy(() ->
                 new TestNgOperation().fromProject(new Project())
                         .testClass("rife.bld.extension.TestNgSimpleTest")
-                        .execute()).isInstanceOf(ExitStatusException.class);
+                        .execute())
+                .as("with testClass").isInstanceOf(ExitStatusException.class);
 
         assertThatThrownBy(() ->
                 new TestNgOperation().fromProject(new Project())
                         .suites("src/test/resources/testng.xml")
-                        .execute()).isInstanceOf(ExitStatusException.class);
+                        .execute())
+                .as("with suites").isInstanceOf(ExitStatusException.class);
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
                         .testClass("rife.bld.extension.TestNgSimpleTest")
                         .methods("rife.bld.extension.TestNgSimpleTest.verifyHello")
                         .execute())
-                .doesNotThrowAnyException();
+                .as("with methods").doesNotThrowAnyException();
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
                         .suites("src/test/resources/testng2.xml")
                         .execute())
-                .doesNotThrowAnyException();
+                .as("suite 2").doesNotThrowAnyException();
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
                         .suites("src/test/resources/testng3.xml")
                         .log(2)
                         .execute())
-                .doesNotThrowAnyException();
+                .as("suite 3").doesNotThrowAnyException();
+
+        assertThatCode(() ->
+                new TestNgOperation().fromProject(new Project())
+                        .suites("src/test/resources/testng3.xml")
+                        .testClasspath("lib/test/*", "build/main", "build/test")
+                        .log(2)
+                        .execute())
+                .as("with run classpath").doesNotThrowAnyException();
     }
 
     @Test

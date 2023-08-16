@@ -52,6 +52,10 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * The suites to run.
      */
     protected final List<String> suites = new ArrayList<>();
+    /**
+     * The classpath entries used for running tests.
+     */
+    protected final List<String> testClasspath = new ArrayList<>();
     private final List<String> args = new ArrayList<>();
     private BaseProject project;
 
@@ -118,9 +122,15 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
         args.clear();
         args.add(javaTool());
+
         args.add("-cp");
-        args.add(String.format("%s:%s:%s", Path.of(project.libTestDirectory().getPath(), "*"),
-                project.buildMainDirectory(), project.buildTestDirectory()));
+        if (testClasspath.isEmpty()) {
+            args.add(String.format("%s:%s:%s", Path.of(project.libTestDirectory().getPath(), "*"),
+                    project.buildMainDirectory(), project.buildTestDirectory()));
+        } else {
+            args.add(String.join(":", testClasspath));
+        }
+
         args.add("org.testng.TestNG");
 
         options.forEach((k, v) -> {
@@ -403,6 +413,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      */
     public TestNgOperation testClass(String... aClass) {
         options.put("-testclass", String.join(",", aClass));
+        return this;
+    }
+
+    /**
+     * Specifies the classpath entries used to run tests.
+     */
+    public TestNgOperation testClasspath(String... entry) {
+        testClasspath.addAll(Arrays.stream(entry).toList());
         return this;
     }
 

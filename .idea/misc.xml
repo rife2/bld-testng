@@ -4,6 +4,7 @@
     <pattern value="rife.bld.extension.TestNgOperationBuild" method="pmd" />
     <pattern value="rife.bld.extension.TestNgOperationBuild" />
     <pattern value="rife.bld.extension.TestNGSimpleTest" method="testFail" />
+    <pattern value="rife.bld.extension.TestNgSimpleTest" method="testFail" />
   </component>
   <component name="PDMPlugin">
     <option name="customRuleSets">

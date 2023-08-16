@@ -31,12 +31,12 @@ class TestNgSimpleTest {
     }
 
     @Test
-    void verifyHello() {
-        Assert.assertTrue(true);
+    void testFail() {
+        Assert.fail("failed");
     }
 
     @Test
-    void testFail() {
-        Assert.fail("failed");
+    void verifyHello() {
+        Assert.assertTrue(true);
     }
 }
