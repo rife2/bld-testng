@@ -47,16 +47,15 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     /**
      * The suite packages to run.
      */
-    protected final List<String> packages = new ArrayList<>();
+    protected final Set<String> packages = new HashSet<>();
     /**
      * The suites to run.
      */
-    protected final List<String> suites = new ArrayList<>();
+    protected final Set<String> suites = new HashSet<>();
     /**
      * The classpath entries used for running tests.
      */
-    protected final List<String> testClasspath = new ArrayList<>();
-    private final List<String> args = new ArrayList<>();
+    protected final Set<String> testClasspath = new HashSet<>();
     private BaseProject project;
 
     /**
@@ -120,7 +119,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
             options.put("d", Path.of(project.buildDirectory().getPath(), "test-output").toString());
         }
 
-        args.clear();
+        List<String> args = new ArrayList<>();
         args.add(javaTool());
 
         args.add("-cp");
