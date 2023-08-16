@@ -106,6 +106,15 @@ class TestNgOperationTest {
     }
 
     @Test
+    void testFailWheneverEverythingSkipped() {
+        var op = new TestNgOperation().failWhenEverythingSkipped(false);
+        assertThat(op.options.get("-failwheneverythingskipped")).isEqualTo("false");
+
+        op = new TestNgOperation().failWhenEverythingSkipped(true);
+        assertThat(op.options.get("-failwheneverythingskipped")).isEqualTo("true");
+    }
+
+    @Test
     void testFailurePolicy() {
         var op = new TestNgOperation().failurePolicy(TestNgOperation.FailurePolicy.CONTINUE);
         assertThat(op.options.get("-configfailurepolicy")).isEqualTo("continue");

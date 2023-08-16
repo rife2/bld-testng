@@ -163,6 +163,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * Should TestNG fail execution if all tests were skipped and nothing was run.
+     */
+    public TestNgOperation failWhenEverythingSkipped(Boolean isFailAllSkipped) {
+        options.put("-failwheneverythingskipped", String.valueOf(isFailAllSkipped));
+        return this;
+    }
+
+    /**
      * Whether TestNG should continue to execute the remaining tests in the suite or skip them if in a {@code @Before*}
      * method.
      */
