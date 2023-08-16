@@ -49,14 +49,16 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      */
     protected final List<String> packages = new ArrayList<>();
     /**
-     * THe suites to run.
+     * The suites to run.
      */
     protected final List<String> suites = new ArrayList<>();
     private final List<String> args = new ArrayList<>();
     private BaseProject project;
 
     /**
-     * Should Method Invocation Listeners be run even for skipped methods. Default is {@code true}.
+     * Should Method Invocation Listeners be run even for skipped methods.
+     *
+     * <p>Default is {@code true}</p>
      */
     public TestNgOperation alwaysRunListeners(Boolean isAlwaysRunListeners) {
         options.put("-alwaysrunlisteners", String.valueOf(isAlwaysRunListeners));
@@ -82,7 +84,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * The directory where the reports will be generated (defaults to {@code build/test-output}).
+     * The directory where the reports will be generated
+     *
+     * <p>Default is {@code build/test-output})</p>
      */
     public TestNgOperation directory(String directoryPath) {
         options.put("-d", directoryPath);
@@ -128,19 +132,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
             args.addAll(suites);
         } else if (!options.containsKey(TEST_CLASS_ARG)) {
             try {
-                var temp = tempFile();
-                try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
-                    bufWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                            "<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">" +
-                            "<suite name=\"bld Default Suite\" verbose=\"2\">" +
-                            "<test name=\"All Packages\">" +
-                            "<packages>");
-                    for (var p : packages) {
-                        bufWriter.write(String.format("<package name=\"%s\"/>", p));
-                    }
-                    bufWriter.write("</packages></test></suite>");
-                    args.add(temp.getPath());
-                }
+                args.add(writeDefaultSuite().getPath());
             } catch (IOException ioe) {
                 LOGGER.log(Level.SEVERE, "An IO error occurred while accessing the default testng.xml file", ioe);
             }
@@ -182,7 +174,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Should TestNG consider failures in Data Providers as test failures. Default is {@code false}.
+     * Should TestNG consider failures in Data Providers as test failures.
+     *
+     * <p>Default is {@code false}</p>.
      */
     public TestNgOperation generateResultsPerSuite(Boolean resultsPerSuite) {
         options.put("-generateResultsPerSuite", String.valueOf(resultsPerSuite));
@@ -191,7 +185,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * The list of groups you want to run.
-     * For example: {@code "windows", "linux", "regression}.
+     *
+     * <p>For example: {@code "windows", "linux", "regression}</p>
      */
     public TestNgOperation groups(String... group) {
         options.put("-groups", String.join(",", group));
@@ -200,7 +195,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Ignore missed test names given by {@link #testNames(String...) testNames} and continue to run existing tests,
-     * if any. Default is {@code false}.
+     * if any.
+     *
+     * <p>Default is {@code false}</p>
      */
     public TestNgOperation ignoreMissedTestName(Boolean isIgnoreMissedTestNames) {
         options.put("-ignoreMissedTestNames", String.valueOf(isIgnoreMissedTestNames));
@@ -209,7 +206,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Should TestNG report all iterations of a data driven test as individual skips, in-case of upstream failures.
-     * Default is {@code false}.
+     *
+     * <p>Default is {@code false}</p>
      */
     public TestNgOperation includeAllDataDrivenTestsWhenSkipping(Boolean isIncludeDrivenTestsWhenSkipping) {
         options.put("-includeAllDataDrivenTestsWhenSkipping", String.valueOf(isIncludeDrivenTestsWhenSkipping));
@@ -218,7 +216,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Enables or disables the JUnit mode.
-     * Default is {@code false}.
+     *
+     * <p>Default is {@code false}</p>
      */
     public TestNgOperation jUnit(Boolean isJunit) {
         options.put("-junit", String.valueOf(isJunit));
@@ -246,7 +245,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Specifies the list of {@code .class} files or class names implementing {@code IMethodSelector}.
-     * For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}
+     *
+     * <p>For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}</p>
      */
     public TestNgOperation methodSelectors(String... selector) {
         options.put("-methodselectors", String.join(",", selector));
@@ -255,7 +255,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Lets you specify individual methods to run.
-     * For example: {@code "com.example.Foo.f1", "com.example.Bar.f2"}
+     *
+     * <p>For example: {@code "com.example.Foo.f1", "com.example.Bar.f2"}</p>
      */
     public TestNgOperation methods(String... method) {
         options.put("-methods", String.join(",", method));
@@ -264,7 +265,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Mixed mode autodetects the type of current test and run it with appropriate runner.
-     * Default is {@code false}.
+     *
+     * <p>Default is {@code false}</p>
      */
     public TestNgOperation mixed(Boolean isMixed) {
         options.put("-mixed", String.valueOf(isMixed));
@@ -290,9 +292,10 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * The list of packages to include in this test.
-     * For example: {@code "com.example", "test.sample.*"}
      * If the package name ends with .* then subpackages are included too.
      * Required if no {@link #suites(String... suites)} specified.
+     *
+     * <p>For example: {@code "com.example", "test.sample.*"}</p>
      */
     public TestNgOperation packages(String... name) {
         packages.addAll(Arrays.stream(name).toList());
@@ -321,7 +324,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Should TestNG consider failures in Data Providers as test failures.
-     * Default is {@code false}.
+     *
+     * <p>Default is {@code false}</p>
      */
     public TestNgOperation propagateDataProviderFailureAsTestFailure(Boolean isPropagateDataProviderFailure) {
         options.put("-propagateDataProviderFailureAsTestFailure", String.valueOf(isPropagateDataProviderFailure));
@@ -374,7 +378,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Specifies the suites to run. For example: {@code "testng.xml", "testng2.xml"}.
+     * Specifies the suites to run.
+     *
+     * <p>For example: {@code "testng.xml", "testng2.xml"}</p>
      */
     public TestNgOperation suites(String... suite) {
         suites.addAll(Arrays.stream(suite).toList());
@@ -391,7 +397,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Specifies the list of class files. For example: {@code "org.foo.Test1","org.foo.test2"}.
+     * Specifies the list of class files.
+     *
+     * <p>For example: {@code "org.foo.Test1","org.foo.test2"}</p>
      */
     public TestNgOperation testClass(String... aClass) {
         options.put("-testclass", String.join(",", aClass));
@@ -452,7 +460,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
-     * Whether to use the default listeners. Default is {@code true}.
+     * Whether to use the default listeners
+     *
+     * <p>Default is {@code true}</p>
      */
     public TestNgOperation useDefaultListeners(Boolean isDefaultListener) {
         options.put("-usedefaultlisteners", String.valueOf(isDefaultListener));
@@ -467,6 +477,22 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     public TestNgOperation verbose(int level) {
         options.put("-verbose", String.valueOf(level));
         return this;
+    }
+
+    private File writeDefaultSuite() throws IOException {
+        var temp = tempFile();
+        try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
+            bufWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                    "<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">" +
+                    "<suite name=\"bld Default Suite\" verbose=\"2\">" +
+                    "<test name=\"All Packages\">" +
+                    "<packages>");
+            for (var p : packages) {
+                bufWriter.write(String.format("<package name=\"%s\"/>", p));
+            }
+            bufWriter.write("</packages></test></suite>");
+        }
+        return temp;
     }
 
     /**
