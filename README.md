@@ -23,6 +23,22 @@ public void testng() throws Exception {
 ./bld compile testng
 ```
 
+You could also override the default `test` command:
+
+```java
+@BuildCommand(summary = "Run tests with TestNG")
+public void test throws Exception {
+    new TestNgOperation()
+    .fromProject(this)
+    .suites("src/test/resources/testng.xml")
+    .verbose(2)
+    .execute();
+}
+```
+```
+./bld compile test
+```
+
 Please check the [TestNgOperation documentation](https://rife2.github.io/bld-testng/rife/bld/extension/TestNgOperation.html#method-summary) for all available configuration options.
 
 ### TestNG Dependency
