@@ -59,7 +59,6 @@ public class TestNgOperationBuild extends Project {
                 .link("https://rife2.github.io/rife2/");
 
         publishOperation()
-                // .repository(MAVEN_LOCAL)
                 .repository(version.isSnapshot() ? repository("rife2-snapshot") : repository("rife2"))
                 .info()
                 .groupId("com.uwyn.rife2")
