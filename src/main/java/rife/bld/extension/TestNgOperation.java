@@ -124,8 +124,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
         args.add("-cp");
         if (testClasspath.isEmpty()) {
-            args.add(String.format("%s:%s:%s", Path.of(project.libTestDirectory().getPath(), "*"),
-                    project.buildMainDirectory(), project.buildTestDirectory()));
+            args.add(String.format("%s:%s:%s:%s", Path.of(project.libTestDirectory().getPath(), "*"),
+                    Path.of(project.libCompileDirectory().getPath(), "*"), project.buildMainDirectory(),
+                    project.buildTestDirectory()));
         } else {
             args.add(String.join(":", testClasspath));
         }
