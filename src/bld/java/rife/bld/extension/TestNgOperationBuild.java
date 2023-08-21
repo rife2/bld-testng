@@ -34,7 +34,7 @@ public class TestNgOperationBuild extends Project {
     public TestNgOperationBuild() {
         pkg = "rife.bld.extension";
         name = "bld-testng";
-        version = version(0, 9,    1, "SNAPSHOT");
+        version = version(0, 9,    1);
 
         javaRelease = 17;
         downloadSources = true;
@@ -44,7 +44,7 @@ public class TestNgOperationBuild extends Project {
         var rife2 = version(1, 7, 0);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "rife2", rife2))
-                .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 1)));
+                .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 2)));
 
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 8, 0)))
