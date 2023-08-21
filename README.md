@@ -13,7 +13,7 @@ To install, please refer to the [extensions documentation](https://github.com/ri
 To run the tests with TestNG, add the following to your build file:
 
 ```java
-@BuildCommand(summary = "Run tests with TestNG")
+@BuildCommand(summary = "Tests the project with TestNG")
 public void testng() throws Exception {
     new TestNgOperation()
     .fromProject(this)
@@ -29,7 +29,7 @@ public void testng() throws Exception {
 You could also override the default `test` command:
 
 ```java
-@BuildCommand(summary = "Run tests with TestNG")
+@BuildCommand(summary = "Tests the project with TestNG")
 public void test throws Exception {
     new TestNgOperation()
     .fromProject(this)

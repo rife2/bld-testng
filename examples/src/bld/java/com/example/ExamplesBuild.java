@@ -9,6 +9,13 @@ import java.util.List;
 import static rife.bld.dependencies.Repository.MAVEN_CENTRAL;
 import static rife.bld.dependencies.Scope.test;
 
+/**
+ * Example build.
+ *
+ * <ul style="list-style-type:none">
+ *     <li>./bld compile test</li>
+ * </ul>
+ */
 public class ExamplesBuild extends BaseProject {
     public ExamplesBuild() {
         pkg = "com.example";
@@ -23,8 +30,8 @@ public class ExamplesBuild extends BaseProject {
         new ExamplesBuild().start(args);
     }
 
-    @BuildCommand(summary = "Run tests with TestNG")
-    public void testng() throws Exception {
+    @BuildCommand(summary = "Tests the project with TestNG")
+    public void test() throws Exception {
         new TestNgOperation()
                 .fromProject(this)
                 .packages("com.example")
