@@ -98,8 +98,20 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * The list of groups you want to be excluded from this run.
+     *
+     * @see #excludeGroups(Collection)
      */
     public TestNgOperation excludeGroups(String... group) {
+        options.put("-excludegroups", String.join(",", group));
+        return this;
+    }
+
+    /**
+     * The list of groups you want to be excluded from this run.
+     *
+     * @see #excludeGroups(String...)
+     */
+    public TestNgOperation excludeGroups(Collection<String> group) {
         options.put("-excludegroups", String.join(",", group));
         return this;
     }
@@ -119,7 +131,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
             options.put("d", Path.of(project.buildDirectory().getPath(), "test-output").toString());
         }
 
-        List<String> args = new ArrayList<>();
+        final List<String> args = new ArrayList<>();
         args.add(javaTool());
 
         args.add("-cp");
@@ -197,8 +209,22 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * The list of groups you want to run.
      *
      * <p>For example: {@code "windows", "linux", "regression}</p>
+     *
+     * @see #groups(Collection)
      */
     public TestNgOperation groups(String... group) {
+        options.put("-groups", String.join(",", group));
+        return this;
+    }
+
+    /**
+     * The list of groups you want to run.
+     *
+     * <p>For example: {@code "windows", "linux", "regression}</p>
+     *
+     * @see #groups(String...)
+     */
+    public TestNgOperation groups(Collection<String> group) {
         options.put("-groups", String.join(",", group));
         return this;
     }
@@ -237,8 +263,21 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     /**
      * The list of {@code .class} files or list of class names implementing {@code ITestListener} or
      * {@code ISuiteListener}
+     *
+     * @see #listener(Collection)
      */
     public TestNgOperation listener(String... listener) {
+        options.put("-listener", String.join(",", listener));
+        return this;
+    }
+
+    /**
+     * The list of {@code .class} files or list of class names implementing {@code ITestListener} or
+     * {@code ISuiteListener}
+     *
+     * @see #listener(String...)
+     */
+    public TestNgOperation listener(Collection<String> listener) {
         options.put("-listener", String.join(",", listener));
         return this;
     }
@@ -257,8 +296,22 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Specifies the list of {@code .class} files or class names implementing {@code IMethodSelector}.
      *
      * <p>For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}</p>
+     *
+     * @see #methodSelectors(Collection)
      */
     public TestNgOperation methodSelectors(String... selector) {
+        options.put("-methodselectors", String.join(",", selector));
+        return this;
+    }
+
+    /**
+     * Specifies the list of {@code .class} files or class names implementing {@code IMethodSelector}.
+     *
+     * <p>For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}</p>
+     *
+     * @see #methodSelectors(String...)
+     */
+    public TestNgOperation methodSelectors(Collection<String> selector) {
         options.put("-methodselectors", String.join(",", selector));
         return this;
     }
@@ -267,8 +320,22 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Lets you specify individual methods to run.
      *
      * <p>For example: {@code "com.example.Foo.f1", "com.example.Bar.f2"}</p>
+     *
+     * @see #methods(Collection)
      */
     public TestNgOperation methods(String... method) {
+        options.put("-methods", String.join(",", method));
+        return this;
+    }
+
+    /**
+     * Lets you specify individual methods to run.
+     *
+     * <p>For example: {@code "com.example.Foo.f1", "com.example.Bar.f2"}</p>
+     *
+     * @see #methods(String...)
+     */
+    public TestNgOperation methods(Collection<String> method) {
         options.put("-methods", String.join(",", method));
         return this;
     }
@@ -285,6 +352,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * The list of {@code .class} files or class names implementing {@code ITestRunnerFactory}.
+     * 
+     * @see #objectFactory(Collection) 
      */
     public TestNgOperation objectFactory(String... factory) {
         options.put("-objectfactory", String.join(",", factory));
@@ -292,10 +361,33 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * The list of {@code .class} files or class names implementing {@code ITestRunnerFactory}.
+     *
+     * @see #objectFactory(String...) 
+     */
+    public TestNgOperation objectFactory(Collection<String> factory) {
+        options.put("-objectfactory", String.join(",", factory));
+        return this;
+    }
+
+    /**
      * The list of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
+     *
+     * @see #overrideIncludedMethods(Collection)
      */
     public TestNgOperation overrideIncludedMethods(String... method) {
+        options.put("-overrideincludedmethods", String.join(",", method));
+        return this;
+    }
+
+    /**
+     * The list of fully qualified class names of listeners that should be skipped from being wired in via
+     * Service Loaders.
+     *
+     * @see #overrideIncludedMethods(String...)
+     */
+    public TestNgOperation overrideIncludedMethods(Collection<String> method) {
         options.put("-overrideincludedmethods", String.join(",", method));
         return this;
     }
@@ -306,9 +398,25 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Required if no {@link #suites(String... suites)} specified.
      *
      * <p>For example: {@code "com.example", "test.sample.*"}</p>
+     *
+     * @see #packages(Collection)
      */
     public TestNgOperation packages(String... name) {
         packages.addAll(Arrays.stream(name).toList());
+        return this;
+    }
+
+    /**
+     * The list of packages to include in this test.
+     * If the package name ends with .* then subpackages are included too.
+     * Required if no {@link #suites(String... suites)} specified.
+     *
+     * <p>For example: {@code "com.example", "test.sample.*"}</p>
+     *
+     * @see #packages(String...)
+     */
+    public TestNgOperation packages(Collection<String> name) {
+        packages.addAll(name);
         return this;
     }
 
@@ -354,6 +462,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * The directories where your javadoc annotated test sources are. This option is only necessary
      * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
+     *
+     * @see #sourceDir(String...)
      */
     public TestNgOperation sourceDir(String... directory) {
         options.put("-sourcedir", String.join(";", directory));
@@ -361,10 +471,35 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * The directories where your javadoc annotated test sources are. This option is only necessary
+     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
+     *
+     * @see #sourceDir(String...)
+     */
+    public TestNgOperation sourceDir(Collection<String> directory) {
+        options.put("-sourcedir", String.join(";", directory));
+        return this;
+    }
+
+    /**
      * Specifies the List of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
+     *
+     * @see #spiListenersToSkip(Collection)
      */
     public TestNgOperation spiListenersToSkip(String... listenerToSkip) {
+        options.put("-spilistenerstoskip", String.join(",", listenerToSkip));
+        return this;
+    }
+
+    /**
+     * Specifies the List of fully qualified class names of listeners that should be skipped from being wired in via
+     * Service Loaders.
+     *
+     * @see #spiListenersToSkip(String...)
+     */
+    public TestNgOperation spiListenersToSkip(Collection<String> listenerToSkip) {
         options.put("-spilistenerstoskip", String.join(",", listenerToSkip));
         return this;
     }
@@ -391,9 +526,23 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Specifies the suites to run.
      *
      * <p>For example: {@code "testng.xml", "testng2.xml"}</p>
+     *
+     * @see #suites(Collection)
      */
     public TestNgOperation suites(String... suite) {
         suites.addAll(Arrays.stream(suite).toList());
+        return this;
+    }
+
+    /**
+     * Specifies the suites to run.
+     *
+     * <p>For example: {@code "testng.xml", "testng2.xml"}</p>
+     *
+     * @see #suites(String...)
+     */
+    public TestNgOperation suites(Collection<String> suite) {
+        suites.addAll(suite);
         return this;
     }
 
@@ -410,6 +559,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Specifies the list of class files.
      *
      * <p>For example: {@code "org.foo.Test1","org.foo.test2"}</p>
+     *
+     * @see #testClass(Collection)
      */
     public TestNgOperation testClass(String... aClass) {
         options.put("-testclass", String.join(",", aClass));
@@ -417,10 +568,34 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * Specifies the list of class files.
+     *
+     * <p>For example: {@code "org.foo.Test1","org.foo.test2"}</p>
+     *
+     * @see #testClass(String...)
+     */
+    public TestNgOperation testClass(Collection<String> aClass) {
+        options.put("-testclass", String.join(",", aClass));
+        return this;
+    }
+
+    /**
      * Specifies the classpath entries used to run tests.
+     *
+     * @see #testClasspath(String...)
      */
     public TestNgOperation testClasspath(String... entry) {
         testClasspath.addAll(Arrays.stream(entry).toList());
+        return this;
+    }
+
+    /**
+     * Specifies the classpath entries used to run tests.
+     *
+     * @see #testClasspath(String...)
+     */
+    public TestNgOperation testClasspath(Collection<String> entry) {
+        testClasspath.addAll(entry);
         return this;
     }
 
@@ -445,9 +620,21 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Only tests defined in a {@code <test>} tag matching one of these names will be run.
+     *
+     * @see #testNames(Collection)
      */
     public TestNgOperation testNames(String... name) {
         options.put("-testnames", Arrays.stream(name).map(s -> '"' + s + '"').collect(Collectors.joining(",")));
+        return this;
+    }
+
+    /**
+     * Only tests defined in a {@code <test>} tag matching one of these names will be run.
+     *
+     * @see #testName(String)
+     */
+    public TestNgOperation testNames(Collection<String> name) {
+        options.put("-testnames", name.stream().map(s -> '"' + s + '"').collect(Collectors.joining(",")));
         return this;
     }
 
