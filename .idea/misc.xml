@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="EntryPointsManager">
     <pattern value="rife.bld.extension.TestNgOperationBuild" method="pmd" />
@@ -9,6 +10,7 @@
     <option name="customRuleSets">
       <list>
         <option value="K:\java\semver\config\pmd.xml" />
+        <option value="$PROJECT_DIR$/../bld-exec/config/pmd.xml" />
       </list>
     </option>
     <option name="skipTestSources" value="false" />
