@@ -1,4 +1,4 @@
-# [Bld](https://rife2.com/bld) Extension to Run Tests with [TestNG](https://testng.org/)
+# [bld](https://rife2.com/bld) Extension to Run Tests with [TestNG](https://testng.org/)
 
 
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -43,7 +43,7 @@ public void test throws Exception {
 ./bld compile test
 ```
 
-- [View Examples](https://github.com/rife2/bld-tetng/tree/master/examples]
+- [View Examples](https://github.com/rife2/bld-tetng/tree/master/examples)
 
 Please check the [TestNgOperation documentation](https://rife2.github.io/bld-testng/rife/bld/extension/TestNgOperation.html#method-summary) for all available configuration options.
 
