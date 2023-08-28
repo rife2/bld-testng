@@ -38,15 +38,18 @@ public void test throws Exception {
     .execute();
 }
 ```
+
 ```
 ./bld compile test
 ```
+
+- [View Examples](https://github.com/rife2/bld-tetng/tree/master/examples]
 
 Please check the [TestNgOperation documentation](https://rife2.github.io/bld-testng/rife/bld/extension/TestNgOperation.html#method-summary) for all available configuration options.
 
 ### TestNG Dependency
 
-Don't forget to add a TestNG test dependency to your build file, as it is not provided by the extension. For example:
+Don't forget to add a TestNG `test` dependency to your build file, as it is not provided by the extension. For example:
 
 ```java
 repositories = List.of(MAVEN_CENTRAL);
