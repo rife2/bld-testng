@@ -41,16 +41,16 @@ public class TestNgOperationBuild extends Project {
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
 
-        var rife2 = version(1, 7, 0);
+        var rife2 = version(1, 7, 3);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "rife2", rife2))
-                .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 2)));
+                .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 5)));
 
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 8, 0)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 0)))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 0)))
-                .include(dependency("org.assertj:assertj-joda-time:2.2.0"));
+                .include(dependency("org.assertj", "assertj-core", version(3, 24, 2)));
 
         javadocOperation()
                 .javadocOptions()
