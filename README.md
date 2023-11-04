@@ -43,7 +43,7 @@ public void test throws Exception {
 ./bld compile test
 ```
 
-- [View Examples](https://github.com/rife2/bld-tetng/tree/master/examples)
+- [View Examples Project](https://github.com/rife2/bld-testng/tree/master/examples)
 
 Please check the [TestNgOperation documentation](https://rife2.github.io/bld-testng/rife/bld/extension/TestNgOperation.html#method-summary) for all available configuration options.
 
