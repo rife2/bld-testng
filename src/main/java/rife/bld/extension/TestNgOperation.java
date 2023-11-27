@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
-    public static final String TEST_CLASS_ARG = "-testclass";
     private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
     /**
      * The run options.
@@ -62,6 +61,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Should Method Invocation Listeners be run even for skipped methods.
      *
      * <p>Default is {@code true}</p>
+     *
+     * @param isAlwaysRunListeners {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation alwaysRunListeners(Boolean isAlwaysRunListeners) {
         options.put("-alwaysrunlisteners", String.valueOf(isAlwaysRunListeners));
@@ -72,17 +74,27 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * This sets the default maximum number of threads to use for data providers when running tests in parallel.
      * It will only take effect if the parallel mode has been selected (for example,with the
      * {@link #parallel(Parallel) parallel} option). This can be overridden in the suite definition.
+     *
+     * @param count the count
+     * @return this operation instance
      */
     public TestNgOperation dataProviderThreadCount(int count) {
-        options.put("-dataproviderthreadcount", String.valueOf(count));
+        if (count >= 0) {
+            options.put("-dataproviderthreadcount", String.valueOf(count));
+        }
         return this;
     }
 
     /**
      * The dependency injector factory implementation that TestNG should use.
+     *
+     * @param injectorFactory the injector factory
+     * @return this operation instance
      */
     public TestNgOperation dependencyInjectorFactory(String injectorFactory) {
-        options.put("-dependencyinjectorfactory", injectorFactory);
+        if (isNotBlank(injectorFactory)) {
+            options.put("-dependencyinjectorfactory", injectorFactory);
+        }
         return this;
     }
 
@@ -90,34 +102,45 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * The directory where the reports will be generated
      *
      * <p>Default is {@code build/test-output})</p>
+     *
+     * @param directoryPath the directory path
+     * @return this operation instance
      */
     public TestNgOperation directory(String directoryPath) {
-        options.put("-d", directoryPath);
+        if (isNotBlank(directoryPath)) {
+            options.put("-d", directoryPath);
+        }
         return this;
     }
 
     /**
      * The list of groups you want to be excluded from this run.
      *
-     * @see #excludeGroups(Collection)
+     * @param group one or more groups
+     * @return this operation instance
+     * @see #excludeGroups(Collection) #excludeGroups(Collection)
      */
     public TestNgOperation excludeGroups(String... group) {
-        options.put("-excludegroups", String.join(",", group));
+        options.put("-excludegroups", String.join(",", Arrays.stream(group).filter(this::isNotBlank).toList()));
         return this;
     }
 
     /**
      * The list of groups you want to be excluded from this run.
      *
-     * @see #excludeGroups(String...)
+     * @param group the list of groups
+     * @return this operation instance
+     * @see #excludeGroups(String...) #excludeGroups(String...)
      */
     public TestNgOperation excludeGroups(Collection<String> group) {
-        options.put("-excludegroups", String.join(",", group));
+        options.put("-excludegroups", String.join(",", group.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
     /**
      * Part of the {@link #execute execute} operation, constructs the command list to use for building the process.
+     *
+     * @return the command list
      */
     @Override
     protected List<String> executeConstructProcessCommandList() {
@@ -152,7 +175,7 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
         if (!suites.isEmpty()) {
             args.addAll(suites);
-        } else if (!options.containsKey(TEST_CLASS_ARG)) {
+        } else if (!options.containsKey("-testclass")) {
             try {
                 args.add(writeDefaultSuite().getPath());
             } catch (IOException ioe) {
@@ -170,6 +193,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Configures the {@link BaseProject}.
+     *
+     * @param project the project
+     * @return this operation instance
      */
     @Override
     public TestNgOperation fromProject(BaseProject project) {
@@ -180,6 +206,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Should TestNG fail execution if all tests were skipped and nothing was run.
+     *
+     * @param isFailAllSkipped {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation failWhenEverythingSkipped(Boolean isFailAllSkipped) {
         options.put("-failwheneverythingskipped", String.valueOf(isFailAllSkipped));
@@ -189,6 +218,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     /**
      * Whether TestNG should continue to execute the remaining tests in the suite or skip them if in a {@code @Before*}
      * method.
+     *
+     * @param policy the policy
+     * @return this operation instance
      */
     public TestNgOperation failurePolicy(FailurePolicy policy) {
         options.put("-configfailurepolicy", policy.name().toLowerCase(Locale.getDefault()));
@@ -199,6 +231,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Should TestNG consider failures in Data Providers as test failures.
      *
      * <p>Default is {@code false}</p>.
+     *
+     * @param resultsPerSuite {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation generateResultsPerSuite(Boolean resultsPerSuite) {
         options.put("-generateResultsPerSuite", String.valueOf(resultsPerSuite));
@@ -210,10 +245,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "windows", "linux", "regression}</p>
      *
-     * @see #groups(Collection)
+     * @param group one or more groups
+     * @return this operation instance
+     * @see #groups(Collection) #groups(Collection)
      */
     public TestNgOperation groups(String... group) {
-        options.put("-groups", String.join(",", group));
+        options.put("-groups", String.join(",", Arrays.stream(group).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -222,10 +259,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "windows", "linux", "regression}</p>
      *
-     * @see #groups(String...)
+     * @param group the list of groups
+     * @return this operation instance
+     * @see #groups(String...) #groups(String...)
      */
     public TestNgOperation groups(Collection<String> group) {
-        options.put("-groups", String.join(",", group));
+        options.put("-groups", String.join(",", group.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -234,6 +273,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * if any.
      *
      * <p>Default is {@code false}</p>
+     *
+     * @param isIgnoreMissedTestNames {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation ignoreMissedTestName(Boolean isIgnoreMissedTestNames) {
         options.put("-ignoreMissedTestNames", String.valueOf(isIgnoreMissedTestNames));
@@ -244,16 +286,29 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Should TestNG report all iterations of a data driven test as individual skips, in-case of upstream failures.
      *
      * <p>Default is {@code false}</p>
+     *
+     * @param isIncludeDrivenTestsWhenSkipping {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation includeAllDataDrivenTestsWhenSkipping(Boolean isIncludeDrivenTestsWhenSkipping) {
         options.put("-includeAllDataDrivenTestsWhenSkipping", String.valueOf(isIncludeDrivenTestsWhenSkipping));
         return this;
     }
 
+    /*
+     * Determines if a string is not blank.
+     */
+    private boolean isNotBlank(String s) {
+        return s != null && !s.isBlank();
+    }
+
     /**
      * Enables or disables the JUnit mode.
      *
      * <p>Default is {@code false}</p>
+     *
+     * @param isJunit {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation jUnit(Boolean isJunit) {
         options.put("-junit", String.valueOf(isJunit));
@@ -264,10 +319,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * The list of {@code .class} files or list of class names implementing {@code ITestListener} or
      * {@code ISuiteListener}
      *
-     * @see #listener(Collection)
+     * @param listener one or more listeners
+     * @return this operation instance
+     * @see #listener(Collection) #listener(Collection)
      */
     public TestNgOperation listener(String... listener) {
-        options.put("-listener", String.join(",", listener));
+        options.put("-listener", String.join(",", Arrays.stream(listener).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -275,20 +332,26 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * The list of {@code .class} files or list of class names implementing {@code ITestListener} or
      * {@code ISuiteListener}
      *
-     * @see #listener(String...)
+     * @param listener the list of listeners
+     * @return this operation instance
+     * @see #listener(String...) #listener(String...)
      */
     public TestNgOperation listener(Collection<String> listener) {
-        options.put("-listener", String.join(",", listener));
+        options.put("-listener", String.join(",", listener.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
     /**
      * Set the Level of verbosity.
      *
-     * @see #verbose(int)
+     * @param level the level
+     * @return this operation instance
+     * @see #verbose(int) #verbose(int)
      */
     public TestNgOperation log(int level) {
-        options.put("-log", String.valueOf(level));
+        if (level >= 0) {
+            options.put("-log", String.valueOf(level));
+        }
         return this;
     }
 
@@ -297,10 +360,13 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}</p>
      *
-     * @see #methodSelectors(Collection)
+     * @param selector one or more selectors
+     * @return this operation instance
+     * @see #methodSelectors(Collection) #methodSelectors(Collection)
      */
     public TestNgOperation methodSelectors(String... selector) {
-        options.put("-methodselectors", String.join(",", selector));
+        options.put("-methodselectors",
+                String.join(",", Arrays.stream(selector).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -309,10 +375,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "com.example.Selector1:3", "com.example.Selector2:2"}</p>
      *
-     * @see #methodSelectors(String...)
+     * @param selector the list of selectors
+     * @return this operation instance
+     * @see #methodSelectors(String...) #methodSelectors(String...)
      */
     public TestNgOperation methodSelectors(Collection<String> selector) {
-        options.put("-methodselectors", String.join(",", selector));
+        options.put("-methodselectors", String.join(",", selector.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -321,10 +389,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "com.example.Foo.f1", "com.example.Bar.f2"}</p>
      *
-     * @see #methods(Collection)
+     * @param method one or more methods
+     * @return this operation instance
+     * @see #methods(Collection) #methods(Collection)
      */
     public TestNgOperation methods(String... method) {
-        options.put("-methods", String.join(",", method));
+        options.put("-methods", String.join(",", Arrays.stream(method).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -333,10 +403,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "com.example.Foo.f1", "com.example.Bar.f2"}</p>
      *
-     * @see #methods(String...)
+     * @param method the list of methods
+     * @return this operation instance
+     * @see #methods(String...) #methods(String...)
      */
     public TestNgOperation methods(Collection<String> method) {
-        options.put("-methods", String.join(",", method));
+        options.put("-methods", String.join(",", method.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -344,6 +416,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Mixed mode autodetects the type of current test and run it with appropriate runner.
      *
      * <p>Default is {@code false}</p>
+     *
+     * @param isMixed {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation mixed(Boolean isMixed) {
         options.put("-mixed", String.valueOf(isMixed));
@@ -352,21 +427,25 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * The list of {@code .class} files or class names implementing {@code ITestRunnerFactory}.
-     * 
-     * @see #objectFactory(Collection) 
+     *
+     * @param factory one or more factories
+     * @return this operation instance
+     * @see #objectFactory(Collection) #objectFactory(Collection)
      */
     public TestNgOperation objectFactory(String... factory) {
-        options.put("-objectfactory", String.join(",", factory));
+        options.put("-objectfactory", String.join(",", Arrays.stream(factory).filter(this::isNotBlank).toList()));
         return this;
     }
 
     /**
      * The list of {@code .class} files or class names implementing {@code ITestRunnerFactory}.
      *
-     * @see #objectFactory(String...) 
+     * @param factory the list of factories
+     * @return this operation instance
+     * @see #objectFactory(String...) #objectFactory(String...)
      */
     public TestNgOperation objectFactory(Collection<String> factory) {
-        options.put("-objectfactory", String.join(",", factory));
+        options.put("-objectfactory", String.join(",", factory.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -374,10 +453,13 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * The list of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
      *
-     * @see #overrideIncludedMethods(Collection)
+     * @param method one or more methods
+     * @return this operation instance
+     * @see #overrideIncludedMethods(Collection) #overrideIncludedMethods(Collection)
      */
     public TestNgOperation overrideIncludedMethods(String... method) {
-        options.put("-overrideincludedmethods", String.join(",", method));
+        options.put("-overrideincludedmethods",
+                String.join(",", Arrays.stream(method).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -385,10 +467,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * The list of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
      *
-     * @see #overrideIncludedMethods(String...)
+     * @param method the list of methods
+     * @return this operation instance
+     * @see #overrideIncludedMethods(String...) #overrideIncludedMethods(String...)
      */
     public TestNgOperation overrideIncludedMethods(Collection<String> method) {
-        options.put("-overrideincludedmethods", String.join(",", method));
+        options.put("-overrideincludedmethods", String.join(",", method.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -399,10 +483,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "com.example", "test.sample.*"}</p>
      *
-     * @see #packages(Collection)
+     * @param name one or more names
+     * @return this operation instance
+     * @see #packages(Collection) #packages(Collection)
      */
     public TestNgOperation packages(String... name) {
-        packages.addAll(Arrays.stream(name).toList());
+        packages.addAll(Arrays.stream(name).filter(this::isNotBlank).toList());
         return this;
     }
 
@@ -413,10 +499,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "com.example", "test.sample.*"}</p>
      *
-     * @see #packages(String...)
+     * @param name the list of names
+     * @return this operation instance
+     * @see #packages(String...) #packages(String...)
      */
     public TestNgOperation packages(Collection<String> name) {
-        packages.addAll(name);
+        packages.addAll(name.stream().filter(this::isNotBlank).toList());
         return this;
     }
 
@@ -425,6 +513,8 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * If not set, default mechanism is not to use parallel threads at all.
      * This can be overridden in the suite definition.
      *
+     * @param mechanism the mechanism
+     * @return this operation instance
      * @see Parallel
      */
     public TestNgOperation parallel(Parallel mechanism) {
@@ -434,9 +524,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Specifies the port number.
+     *
+     * @param port the port
+     * @return this operation instance
      */
     public TestNgOperation port(int port) {
-        options.put("-port", String.valueOf(port));
+        if (port >= 1) {
+            options.put("-port", String.valueOf(port));
+        }
         return this;
     }
 
@@ -444,6 +539,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Should TestNG consider failures in Data Providers as test failures.
      *
      * <p>Default is {@code false}</p>
+     *
+     * @param isPropagateDataProviderFailure {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation propagateDataProviderFailureAsTestFailure(Boolean isPropagateDataProviderFailure) {
         options.put("-propagateDataProviderFailureAsTestFailure", String.valueOf(isPropagateDataProviderFailure));
@@ -452,9 +550,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
 
     /**
      * Specifies the extended configuration for custom report listener.
+     *
+     * @param reporter the reporter
+     * @return this operation instance
      */
     public TestNgOperation reporter(String reporter) {
-        options.put("-reporter", reporter);
+        if (isNotBlank(reporter)) {
+            options.put("-reporter", reporter);
+        }
         return this;
     }
 
@@ -463,10 +566,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
-     * @see #sourceDir(String...)
+     * @param directory one or more directories
+     * @return this operation instance
+     * @see #sourceDir(String...) #sourceDir(String...)
      */
     public TestNgOperation sourceDir(String... directory) {
-        options.put("-sourcedir", String.join(";", directory));
+        options.put("-sourcedir", String.join(";", Arrays.stream(directory).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -475,10 +580,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
-     * @see #sourceDir(String...)
+     * @param directory the list of directories
+     * @return this operation instance
+     * @see #sourceDir(String...) #sourceDir(String...)
      */
     public TestNgOperation sourceDir(Collection<String> directory) {
-        options.put("-sourcedir", String.join(";", directory));
+        options.put("-sourcedir", String.join(";", directory.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -486,10 +593,13 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Specifies the List of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
      *
-     * @see #spiListenersToSkip(Collection)
+     * @param listenerToSkip the listeners to skip
+     * @return this operation instance
+     * @see #spiListenersToSkip(Collection) #spiListenersToSkip(Collection)
      */
     public TestNgOperation spiListenersToSkip(String... listenerToSkip) {
-        options.put("-spilistenerstoskip", String.join(",", listenerToSkip));
+        options.put("-spilistenerstoskip",
+                String.join(",", Arrays.stream(listenerToSkip).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -497,28 +607,41 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Specifies the List of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
      *
-     * @see #spiListenersToSkip(String...)
+     * @param listenerToSkip the listeners to skip
+     * @return this operation instance
+     * @see #spiListenersToSkip(String...) #spiListenersToSkip(String...)
      */
     public TestNgOperation spiListenersToSkip(Collection<String> listenerToSkip) {
-        options.put("-spilistenerstoskip", String.join(",", listenerToSkip));
+        options.put("-spilistenerstoskip",
+                String.join(",", listenerToSkip.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
     /**
      * This specifies the default name of the test suite, if not specified in the suite definition file or source code.
      * This option is ignored if the {@code suite.xml} file or the source code specifies a different suite name.
+     *
+     * @param name the name
+     * @return this operation instance
      */
     public TestNgOperation suiteName(String name) {
-        options.put("-suitename", '"' + name + '"');
+        if (isNotBlank(name)) {
+            options.put("-suitename", '"' + name + '"');
+        }
         return this;
     }
 
     /**
      * Specifies the size of the thread pool to use to run suites.
      * Required if no {@link #packages(String...)} specified.
+     *
+     * @param poolSize the pool size
+     * @return this operation instance
      */
     public TestNgOperation suiteThreadPoolSize(int poolSize) {
-        options.put("-suitethreadpoolsize", String.valueOf(poolSize));
+        if (poolSize >= 0) {
+            options.put("-suitethreadpoolsize", String.valueOf(poolSize));
+        }
         return this;
     }
 
@@ -527,10 +650,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "testng.xml", "testng2.xml"}</p>
      *
-     * @see #suites(Collection)
+     * @param suite one or more suites
+     * @return this operation instance
+     * @see #suites(Collection) #suites(Collection)
      */
     public TestNgOperation suites(String... suite) {
-        suites.addAll(Arrays.stream(suite).toList());
+        suites.addAll(Arrays.stream(suite).filter(this::isNotBlank).toList());
         return this;
     }
 
@@ -539,15 +664,19 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "testng.xml", "testng2.xml"}</p>
      *
-     * @see #suites(String...)
+     * @param suite the list of suites
+     * @return this operation instance
+     * @see #suites(String...) #suites(String...)
      */
     public TestNgOperation suites(Collection<String> suite) {
-        suites.addAll(suite);
+        suites.addAll(suite.stream().filter(this::isNotBlank).toList());
         return this;
     }
 
     /**
      * Create a test file and delete it on exit.
+     *
+     * @return this operation instance
      */
     private File tempFile() throws IOException {
         var temp = File.createTempFile("testng", ".xml");
@@ -560,10 +689,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "org.foo.Test1","org.foo.test2"}</p>
      *
-     * @see #testClass(Collection)
+     * @param aClass one or more classes
+     * @return this operation instance
+     * @see #testClass(Collection) #testClass(Collection)
      */
     public TestNgOperation testClass(String... aClass) {
-        options.put("-testclass", String.join(",", aClass));
+        options.put("-testclass", String.join(",", Arrays.stream(aClass).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -572,30 +703,36 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      *
      * <p>For example: {@code "org.foo.Test1","org.foo.test2"}</p>
      *
-     * @see #testClass(String...)
+     * @param aClass the list of classes
+     * @return this operation instance
+     * @see #testClass(String...) #testClass(String...)
      */
     public TestNgOperation testClass(Collection<String> aClass) {
-        options.put("-testclass", String.join(",", aClass));
+        options.put("-testclass", String.join(",", aClass.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
     /**
      * Specifies the classpath entries used to run tests.
      *
-     * @see #testClasspath(String...)
+     * @param entry one or more entries
+     * @return this operation instance
+     * @see #testClasspath(String...) #testClasspath(String...)
      */
     public TestNgOperation testClasspath(String... entry) {
-        testClasspath.addAll(Arrays.stream(entry).toList());
+        testClasspath.addAll(Arrays.stream(entry).filter(this::isNotBlank).toList());
         return this;
     }
 
     /**
      * Specifies the classpath entries used to run tests.
      *
-     * @see #testClasspath(String...)
+     * @param entry the list of entries
+     * @return this operation instance
+     * @see #testClasspath(String...) #testClasspath(String...)
      */
     public TestNgOperation testClasspath(Collection<String> entry) {
-        testClasspath.addAll(entry);
+        testClasspath.addAll(entry.stream().filter(this::isNotBlank).toList());
         return this;
     }
 
@@ -603,46 +740,67 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Specifies a jar file that contains test classes. If a {@code testng.xml} file is found at the root of that
      * jar file, it will be used, otherwise, all the test classes found in this jar file will be considered test
      * classes.
+     *
+     * @param jar the jar
+     * @return this operation instance
      */
     public TestNgOperation testJar(String jar) {
-        options.put("-testjar", jar);
+        if (isNotBlank(jar)) {
+            options.put("-testjar", jar);
+        }
         return this;
     }
 
     /**
      * This specifies the default name of test, if not specified in the suite definition file or source code.
      * This option is ignored if the {@code suite.xml} file or the source code specifies a different test name.
+     *
+     * @param name the name
+     * @return this operation instance
      */
     public TestNgOperation testName(String name) {
-        options.put("-testname", '"' + name + '"');
+        if (isNotBlank(name)) {
+            options.put("-testname", '"' + name + '"');
+        }
         return this;
     }
 
     /**
      * Only tests defined in a {@code <test>} tag matching one of these names will be run.
      *
-     * @see #testNames(Collection)
+     * @param name one or more names
+     * @return this operation instance
+     * @see #testNames(Collection) #testNames(Collection)
      */
     public TestNgOperation testNames(String... name) {
-        options.put("-testnames", Arrays.stream(name).map(s -> '"' + s + '"').collect(Collectors.joining(",")));
+        options.put("-testnames",
+                Arrays.stream(name).filter(this::isNotBlank).map(s -> '"' + s + '"').collect(Collectors.joining(",")));
         return this;
     }
 
     /**
      * Only tests defined in a {@code <test>} tag matching one of these names will be run.
      *
-     * @see #testName(String)
+     * @param name the list of names
+     * @return this operation instance
+     * @see #testName(String) #testName(String)
      */
     public TestNgOperation testNames(Collection<String> name) {
-        options.put("-testnames", name.stream().map(s -> '"' + s + '"').collect(Collectors.joining(",")));
+        options.put("-testnames",
+                name.stream().filter(this::isNotBlank).map(s -> '"' + s + '"').collect(Collectors.joining(",")));
         return this;
     }
 
     /**
      * Specifies the factory used to create tests.
+     *
+     * @param factory the factory
+     * @return this operation instance
      */
     public TestNgOperation testRunFactory(String factory) {
-        options.put("-testrunfactory", factory);
+        if (isNotBlank(factory)) {
+            options.put("-testrunfactory", factory);
+        }
         return this;
     }
 
@@ -650,17 +808,27 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * This sets the default maximum number of threads to use for running tests in parallel. It will only take effect
      * if the parallel mode has been selected (for example, with the {@link #parallel(Parallel) parallel} option).
      * This can be overridden in the suite definition.
+     *
+     * @param count the count
+     * @return this operation instance
      */
     public TestNgOperation threadCount(int count) {
-        options.put("-threadcount", String.valueOf(count));
+        if (count >= 0) {
+            options.put("-threadcount", String.valueOf(count));
+        }
         return this;
     }
 
     /**
      * Specifies the thread pool executor factory implementation that TestNG should use.
+     *
+     * @param factoryClass the factory class
+     * @return this operation instance
      */
     public TestNgOperation threadPoolFactoryClass(String factoryClass) {
-        options.put("-threadpoolfactoryclass", factoryClass);
+        if (isNotBlank(factoryClass)) {
+            options.put("-threadpoolfactoryclass", factoryClass);
+        }
         return this;
     }
 
@@ -668,6 +836,9 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Whether to use the default listeners
      *
      * <p>Default is {@code true}</p>
+     *
+     * @param isDefaultListener {@code true} or {@code false}
+     * @return this operation instance
      */
     public TestNgOperation useDefaultListeners(Boolean isDefaultListener) {
         options.put("-usedefaultlisteners", String.valueOf(isDefaultListener));
@@ -677,10 +848,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     /**
      * Set the Level of verbosity.
      *
-     * @see #log(int)
+     * @param level the level
+     * @return this operation instance
+     * @see #log(int) #log(int)
      */
     public TestNgOperation verbose(int level) {
-        options.put("-verbose", String.valueOf(level));
+        if (level >= 0) {
+            options.put("-verbose", String.valueOf(level));
+        }
         return this;
     }
 
@@ -704,9 +879,14 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * This attribute should contain the path to a valid XML file inside the test jar
      * (e.g. {@code "resources/testng.xml"}). The default is {@code testng.xml}, which means a file called
      * {@code testng.xml} at the root of the jar file. This option will be ignored unless a test jar is specified.
+     *
+     * @param path the path
+     * @return this operation instance
      */
     public TestNgOperation xmlPathInJar(String path) {
-        options.put("-xmlpathinjar", path);
+        if (isNotBlank(path)) {
+            options.put("-xmlpathinjar", path);
+        }
         return this;
     }
 
@@ -714,13 +894,31 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      * Parallel Mechanisms
      */
     public enum Parallel {
-        METHODS, TESTS, CLASSES
+        /**
+         * Methods mechanism.
+         */
+        METHODS,
+        /**
+         * Tests mechanism.
+         */
+        TESTS,
+        /**
+         * Classes mechanism.
+         */
+        CLASSES
     }
 
     /**
      * Failure Policies
      */
     public enum FailurePolicy {
-        SKIP, CONTINUE
+        /**
+         * Skip failure policy.
+         */
+        SKIP,
+        /**
+         * Continue failure policy.
+         */
+        CONTINUE
     }
 }

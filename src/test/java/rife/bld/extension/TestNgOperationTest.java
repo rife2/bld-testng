@@ -47,10 +47,10 @@ class TestNgOperationTest {
     @Test
     void testClass() {
         var op = new TestNgOperation().testClass(FOO, BAR);
-        assertThat(op.options.get(TestNgOperation.TEST_CLASS_ARG)).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options.get("-testclass")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         new TestNgOperation().testClass(List.of(FOO, BAR));
-        assertThat(op.options.get(TestNgOperation.TEST_CLASS_ARG)).as("as list")
+        assertThat(op.options.get("-testclass")).as("as list")
                 .isEqualTo(String.format("%s,%s", FOO, BAR));
     }
 

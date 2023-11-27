@@ -22,7 +22,7 @@ public void testng() throws Exception {
 }
 ```
 
-```text
+```console
 ./bld compile testng
 ```
 
@@ -39,7 +39,7 @@ public void test throws Exception {
 }
 ```
 
-```
+```console
 ./bld compile test
 ```
 

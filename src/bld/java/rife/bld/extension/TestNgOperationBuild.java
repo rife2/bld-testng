@@ -34,7 +34,7 @@ public class TestNgOperationBuild extends Project {
     public TestNgOperationBuild() {
         pkg = "rife.bld.extension";
         name = "bld-testng";
-        version = version(0, 9, 2);
+        version = version(0, 9, 3, "SNAPSHOT");
 
         javaRelease = 17;
         downloadSources = true;
@@ -48,12 +48,13 @@ public class TestNgOperationBuild extends Project {
 
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 8, 0)))
-                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 0)))
-                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 0)))
+                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 1)))
+                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 1)))
                 .include(dependency("org.assertj", "assertj-core", version(3, 24, 2)));
 
         javadocOperation()
                 .javadocOptions()
+                .author()
                 .docLint(NO_MISSING)
                 .link("https://rife2.github.io/bld/")
                 .link("https://rife2.github.io/rife2/");
@@ -65,13 +66,24 @@ public class TestNgOperationBuild extends Project {
                 .artifactId("bld-testng")
                 .description("bld Extension to execute tests with TestNG")
                 .url("https://github.com/rife2/bld-testng")
-                .developer(new PublishDeveloper().id("ethauvin").name("Erik C. Thauvin").email("erik@thauvin.net")
-                        .url("https://erik.thauvin.net/"))
-                .license(new PublishLicense().name("The Apache License, Version 2.0")
-                        .url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
-                .scm(new PublishScm().connection("scm:git:https://github.com/rife2/bld-testng.git")
-                        .developerConnection("scm:git:git@github.com:rife2/bld-testng.git")
-                        .url("https://github.com/rife2/bld-testng"))
+                .developer(
+                        new PublishDeveloper()
+                                .id("ethauvin")
+                                .name("Erik C. Thauvin")
+                                .email("erik@thauvin.net")
+                                .url("https://erik.thauvin.net/")
+                )
+                .license(
+                        new PublishLicense()
+                                .name("The Apache License, Version 2.0")
+                                .url("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                )
+                .scm(
+                        new PublishScm()
+                                .connection("scm:git:https://github.com/rife2/bld-testng.git")
+                                .developerConnection("scm:git:git@github.com:rife2/bld-testng.git")
+                                .url("https://github.com/rife2/bld-testng")
+                )
                 .signKey(property("sign.key"))
                 .signPassphrase(property("sign.passphrase"));
     }
@@ -81,7 +93,7 @@ public class TestNgOperationBuild extends Project {
     }
 
     @BuildCommand(summary = "Runs PMD analysis")
-    public void pmd() throws Exception {
+    public void pmd() {
         new PmdOperation()
                 .fromProject(this)
                 .failOnViolation(true)
