@@ -53,6 +53,6 @@ Don't forget to add a TestNG `test` dependency to your build file, as it is not 
 
 ```java
 repositories = List.of(MAVEN_CENTRAL);
-scope(test).include(dependency("org.testng", "testng", version(7, 8, 0)));
+scope(test).include(dependency("org.testng", "testng", version(7, 9, 0)));
 
 ```
