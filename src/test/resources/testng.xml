@@ -2,7 +2,7 @@
 <suite name="test suite 1" verbose="2">
     <test name="simple test">
         <classes>
-            <class name="rife.bld.extension.TestNgSimpleTest"/>
+            <class name="rife.bld.extension.TestNgExample"/>
         </classes>
     </test>
 </suite>

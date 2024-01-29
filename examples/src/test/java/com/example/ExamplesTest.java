@@ -3,18 +3,16 @@ package com.example;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-class ExampleTest {
-    public static void main(String[] args) {
-        new ExampleTest().verifyHello();
-    }
+class ExamplesTest {
+    private final ExamplesLib example = new ExamplesLib();
 
     @Test
-    void testFail() {
-        Assert.fail("failed");
+    void foo() {
+        Assert.assertNotEquals(example.getMessage(), "foo");
     }
 
     @Test
     void verifyHello() {
-        Assert.assertTrue(true);
+        Assert.assertEquals(example.getMessage(), "Hello World!");
     }
 }

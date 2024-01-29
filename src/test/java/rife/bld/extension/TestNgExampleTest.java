@@ -20,18 +20,21 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * Implements the TestNgSimpleTest class.
+ * Implements the TestNgExampleTest class.
  *
  * @author <a href="https://erik.thauvin.net/">Erik C. Thauvin</a>
  * @since 1.0
  */
-class TestNgSimple2Test {
-    public static void main(String[] args) {
-        new TestNgSimple2Test().verifyHello();
+class TestNgExampleTest {
+    private final TestNgExample example = new TestNgExample();
+
+    @Test
+    void foo() {
+        Assert.assertEquals(example.getMessage(), "foo");
     }
 
     @Test
     void verifyHello() {
-        Assert.assertTrue(true);
+        Assert.assertEquals(example.getMessage(), "Hello World!");
     }
 }

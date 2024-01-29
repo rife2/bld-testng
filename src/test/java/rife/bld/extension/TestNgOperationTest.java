@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the original author or authors.
+ * Copyright 2023-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ class TestNgOperationTest {
     void testExecute() {
         assertThatThrownBy(() ->
                 new TestNgOperation().fromProject(new Project())
-                        .testClass("rife.bld.extension.TestNgSimpleTest")
+                        .testClass("rife.bld.extension.TestNgExampleTest")
                         .execute())
                 .as("with testClass").isInstanceOf(ExitStatusException.class);
 
@@ -97,8 +97,8 @@ class TestNgOperationTest {
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
-                        .testClass("rife.bld.extension.TestNgSimpleTest")
-                        .methods("rife.bld.extension.TestNgSimpleTest.verifyHello")
+                        .testClass("rife.bld.extension.TestNgExampleTest")
+                        .methods("rife.bld.extension.TestNgExampleTest.verifyHello")
                         .execute())
                 .as("with methods").doesNotThrowAnyException();
 
@@ -110,14 +110,14 @@ class TestNgOperationTest {
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
-                        .suites("src/test/resources/testng3.xml")
+                        .suites("src/test/resources/testng2.xml")
                         .log(2)
                         .execute())
-                .as("suite 3").doesNotThrowAnyException();
+                .as("suite 2 - log ").doesNotThrowAnyException();
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
-                        .suites("src/test/resources/testng3.xml")
+                        .suites("src/test/resources/testng2.xml")
                         .testClasspath("lib/test/*", "build/main", "build/test")
                         .log(2)
                         .execute())
@@ -125,7 +125,7 @@ class TestNgOperationTest {
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
-                        .suites("src/test/resources/testng3.xml")
+                        .suites("src/test/resources/testng2.xml")
                         .testClasspath(List.of("lib/test/*", "build/main", "build/test"))
                         .log(2)
                         .execute())
@@ -316,6 +316,15 @@ class TestNgOperationTest {
     }
 
     @Test
+    void testShareThreadPoolForDataProviders() {
+        var op = new TestNgOperation().shareThreadPoolForDataProviders(true);
+        assertThat(op.options.get("-shareThreadPoolForDataProviders")).isEqualTo("true");
+
+        op = new TestNgOperation().shareThreadPoolForDataProviders(false);
+        assertThat(op.options.get("-shareThreadPoolForDataProviders")).isNull();
+    }
+
+    @Test
     void testSourceDir() {
         var op = new TestNgOperation().sourceDir(FOO, BAR);
         assertThat(op.options.get("-sourcedir")).isEqualTo(String.format("%s;%s", FOO, BAR));
@@ -373,6 +382,15 @@ class TestNgOperationTest {
 
         op = new TestNgOperation().useDefaultListeners(true);
         assertThat(op.options.get("-usedefaultlisteners")).isEqualTo("true");
+    }
+
+    @Test
+    void testUseGlobalThreadPool() {
+        var op = new TestNgOperation().useGlobalThreadPool(true);
+        assertThat(op.options.get("-useGlobalThreadPool")).isEqualTo("true");
+
+        op = new TestNgOperation().useGlobalThreadPool(false);
+        assertThat(op.options.get("-useGlobalThreadPool")).isNull();
     }
 
     @Test

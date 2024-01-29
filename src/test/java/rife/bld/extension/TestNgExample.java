@@ -16,27 +16,15 @@
 
 package rife.bld.extension;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 /**
- * Implements the TestNgSimpleTest class.
+ * Implements the TestNgExample class.
  *
  * @author <a href="https://erik.thauvin.net/">Erik C. Thauvin</a>
  * @since 1.0
  */
-class TestNgSimpleTest {
-    public static void main(String[] args) {
-        new TestNgSimpleTest().verifyHello();
-    }
-
-    @Test
-    void testFail() {
-        Assert.fail("failed");
-    }
-
-    @Test
-    void verifyHello() {
-        Assert.assertTrue(true);
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
+class TestNgExample {
+    public String getMessage() {
+        return "Hello World!";
     }
 }
