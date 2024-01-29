@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the original author or authors.
+ * Copyright 2023-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -562,6 +562,19 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
     }
 
     /**
+     * Should TestNG use a global Shared ThreadPool (At suite level) for running data providers.
+     *
+     * @param shareThreadPoolForDataProviders {@code true} or {@code false}
+     * @return this operation instance
+     */
+    public TestNgOperation shareThreadPoolForDataProviders(boolean shareThreadPoolForDataProviders) {
+        if (shareThreadPoolForDataProviders) {
+            options.put("-shareThreadPoolForDataProviders", String.valueOf(shareThreadPoolForDataProviders));
+        }
+        return this;
+    }
+
+    /**
      * The directories where your javadoc annotated test sources are. This option is only necessary
      * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
@@ -842,6 +855,19 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
      */
     public TestNgOperation useDefaultListeners(Boolean isDefaultListener) {
         options.put("-usedefaultlisteners", String.valueOf(isDefaultListener));
+        return this;
+    }
+
+    /**
+     * Should TestNG use a global Shared ThreadPool (At suite level) for running regular and data driven tests.
+     *
+     * @param useGlobalThreadPool {@code true} or {@code false}
+     * @return this operation instance
+     */
+    public TestNgOperation useGlobalThreadPool(boolean useGlobalThreadPool) {
+        if (useGlobalThreadPool) {
+            options.put("-useGlobalThreadPool", String.valueOf(useGlobalThreadPool));
+        }
         return this;
     }
 
