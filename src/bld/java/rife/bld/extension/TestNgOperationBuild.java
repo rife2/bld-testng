@@ -44,7 +44,7 @@ public class TestNgOperationBuild extends Project {
         var rife2 = version(1, 7, 3);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "rife2", rife2))
-                .include(dependency("com.uwyn.rife2", "bld", version(1, 7, 5)));
+                .include(dependency("com.uwyn.rife2", "bld", version(1, 8, 0)));
 
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 9, 0)))
