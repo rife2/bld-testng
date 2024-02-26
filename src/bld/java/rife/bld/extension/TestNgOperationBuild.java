@@ -34,7 +34,7 @@ public class TestNgOperationBuild extends Project {
     public TestNgOperationBuild() {
         pkg = "rife.bld.extension";
         name = "bld-testng";
-        version = version(0, 9, 3);
+        version = version(0, 9, 4, "SNAPSHOTS");
 
         javaRelease = 17;
         downloadSources = true;
@@ -48,9 +48,9 @@ public class TestNgOperationBuild extends Project {
 
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 9, 0)))
-                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 1)))
-                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 1)))
-                .include(dependency("org.assertj", "assertj-core", version(3, 25, 2)));
+                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 2)))
+                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 2)))
+                .include(dependency("org.assertj", "assertj-core", version(3, 25, 3)));
 
         javadocOperation()
                 .javadocOptions()
