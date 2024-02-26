@@ -22,6 +22,9 @@ public class ExamplesBuild extends BaseProject {
         name = "Examples";
         version = version(0, 1, 0);
 
+        downloadSources = true;
+        autoDownloadPurge = true;
+
         repositories = List.of(MAVEN_CENTRAL);
         
         scope(test).include(dependency("org.testng", "testng", version(7, 9, 0)));
