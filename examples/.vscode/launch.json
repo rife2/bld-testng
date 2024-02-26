@@ -5,7 +5,10 @@
             "type": "java",
             "name": "Run Tests",
             "request": "launch",
-            "mainClass": "com.example.ExamplesTest"
+            "mainClass": "com.example.ExamplesBuild",
+            "args": [
+                "compile", "test"
+            ]
         }
     ]
 }
