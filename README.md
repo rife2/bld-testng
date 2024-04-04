@@ -1,6 +1,5 @@
 # [bld](https://rife2.com/bld) Extension to Run Tests with [TestNG](https://testng.org/)
 
-
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/java-17%2B-blue)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 [![bld](https://img.shields.io/badge/1.9.0-FA9052?label=bld&labelColor=2392FF)](https://rife2.com/bld)
@@ -13,29 +12,11 @@ To install, please refer to the [extensions documentation](https://github.com/ri
 To run the tests with TestNG, add the following to your build file:
 
 ```java
-@BuildCommand(summary = "Tests the project with TestNG")
-public void testng() throws Exception {
-    new TestNgOperation()
-    .fromProject(this)
-    .packages("com.example")
-    .execute();
-}
-```
-
-```console
-./bld compile testng
-```
-
-You could also override the default `test` command:
-
-```java
-@BuildCommand(summary = "Tests the project with TestNG")
-public void test throws Exception {
-    new TestNgOperation()
-    .fromProject(this)
-    .suites("src/test/resources/testng.xml")
-    .verbose(2)
-    .execute();
+@Override
+public TestOperation<?, ?> testOperation() {
+    return new TestNgOperation()
+            .fromProject(this)
+            .packages("com.example");
 }
 ```
 

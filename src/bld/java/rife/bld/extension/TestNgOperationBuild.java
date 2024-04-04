@@ -34,7 +34,7 @@ public class TestNgOperationBuild extends Project {
     public TestNgOperationBuild() {
         pkg = "rife.bld.extension";
         name = "bld-testng";
-        version = version(0, 9, 4);
+        version = version(0, 9, 5);
 
         javaRelease = 17;
         downloadSources = true;
@@ -76,7 +76,7 @@ public class TestNgOperationBuild extends Project {
                 .license(
                         new PublishLicense()
                                 .name("The Apache License, Version 2.0")
-                                .url("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                                .url("https://www.apache.org/licenses/LICENSE-2.0.txt")
                 )
                 .scm(
                         new PublishScm()

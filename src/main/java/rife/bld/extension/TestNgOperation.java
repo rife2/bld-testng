@@ -17,7 +17,7 @@
 package rife.bld.extension;
 
 import rife.bld.BaseProject;
-import rife.bld.operations.AbstractProcessOperation;
+import rife.bld.operations.TestOperation;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
+public class TestNgOperation extends TestOperation<TestNgOperation, List<String>> {
     private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
     /**
      * The run options.
@@ -151,11 +151,12 @@ public class TestNgOperation extends AbstractProcessOperation<TestNgOperation> {
         }
 
         if (!options.containsKey("-d")) {
-            options.put("d", Path.of(project.buildDirectory().getPath(), "test-output").toString());
+            options.put("-d", Path.of(project.buildDirectory().getPath(), "test-output").toString());
         }
 
         final List<String> args = new ArrayList<>();
         args.add(javaTool());
+        args.addAll(this.javaOptions());
 
         args.add("-cp");
         if (testClasspath.isEmpty()) {
