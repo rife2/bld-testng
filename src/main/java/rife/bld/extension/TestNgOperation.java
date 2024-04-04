@@ -184,8 +184,11 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
             }
         }
 
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine(String.join(" ", args));
+        }
+
         if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(String.join(" ", args));
             LOGGER.info(String.format("Report will be saved in file://%s", new File(options.get("-d"))));
         }
 

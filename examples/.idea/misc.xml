@@ -3,6 +3,10 @@
   <component name="EntryPointsManager">
     <pattern value="com.example.ExamplesBuild" method="testng" />
     <pattern value="com.example.ExampleTest" method="testFail" />
+    <pattern value="com.example.ExamplesBuild" method="jacoco" />
+    <pattern value="com.example.ExamplesTest" />
+    <pattern value="com.example.ExamplesTest" method="foo" />
+    <pattern value="com.example.ExamplesTest" method="verifyHello" />
   </component>
   <component name="PDMPlugin">
     <option name="customRuleSets">
