@@ -232,7 +232,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
-     * Should TestNG consider failures in Data Providers as test failures.
+     * Should TestNG generate results on a per suite basis by creating a sub directory for each suite and dumping
+     * results into it.
      *
      * <p>Default is {@code false}</p>.
      *
@@ -346,6 +347,29 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
+     * An implementation of {@code ListenerComparator} that will be used by TestNG to determine order of execution for
+     * listeners.
+     *
+     * @param listenerComparator the listener comparator
+     * @return this operation instance
+     */
+    public TestNgOperation listenerComparator(String listenerComparator) {
+        options.put("-listenercomparator", listenerComparator);
+        return this;
+    }
+
+    /**
+     * The factory used to create TestNG listeners.
+     *
+     * @param listenerFactory the listener factory
+     * @return this operation instance
+     */
+    public TestNgOperation listenerFactory(String listenerFactory) {
+        options.put("-listenerfactory", listenerFactory);
+        return this;
+    }
+
+    /**
      * Set the Level of verbosity.
      *
      * @param level the level
@@ -426,6 +450,18 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation mixed(Boolean isMixed) {
         options.put("-mixed", String.valueOf(isMixed));
+        return this;
+    }
+
+    /**
+     * Fully qualified class name that implements {@code org.testng.ITestObjectFactory} which can be used to create
+     * test class and listener instances.
+     *
+     * @param objectFactory the object factory
+     * @return this operation instance
+     */
+    public TestNgOperation objectFactory(String objectFactory) {
+        options.put("-objectfactory", objectFactory);
         return this;
     }
 

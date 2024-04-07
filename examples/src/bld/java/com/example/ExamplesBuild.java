@@ -30,12 +30,13 @@ public class ExamplesBuild extends BaseProject {
         version = version(0, 1, 0);
 
         javaRelease = 17;
+
         downloadSources = true;
         autoDownloadPurge = true;
 
         repositories = List.of(MAVEN_CENTRAL);
 
-        scope(test).include(dependency("org.testng", "testng", version(7, 9, 0)));
+        scope(test).include(dependency("org.testng", "testng", version(7, 10, 0)));
     }
 
     public static void main(String[] args) {

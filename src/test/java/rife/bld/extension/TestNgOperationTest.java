@@ -17,7 +17,7 @@
 package rife.bld.extension;
 
 import org.junit.jupiter.api.Test;
-import rife.bld.Project; // NOPMD
+import rife.bld.Project;
 import rife.bld.operations.exceptions.ExitStatusException;
 
 import java.util.List;
