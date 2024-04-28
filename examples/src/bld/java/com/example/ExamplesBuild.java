@@ -17,11 +17,11 @@ import static rife.bld.dependencies.Scope.test;
 
 /**
  * Example build.
- *
- * <ul style="list-style-type:none">
- * <li>{@code ./bld compile test}</li>
- * <li>{@code ./bld compile jacoco}</li>
- * </ul>
+ * 
+ * <pre>{@code
+ * ./bld compile test
+ * ./bld compile jacoco
+ * }</pre>
  */
 public class ExamplesBuild extends BaseProject {
     public ExamplesBuild() {
@@ -36,7 +36,7 @@ public class ExamplesBuild extends BaseProject {
 
         repositories = List.of(MAVEN_CENTRAL);
 
-        scope(test).include(dependency("org.testng", "testng", version(7, 10, 1)));
+        scope(test).include(dependency("org.testng", "testng", version(7, 10, 2)));
     }
 
     public static void main(String[] args) {

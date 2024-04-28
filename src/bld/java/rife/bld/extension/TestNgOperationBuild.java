@@ -34,9 +34,10 @@ public class TestNgOperationBuild extends Project {
     public TestNgOperationBuild() {
         pkg = "rife.bld.extension";
         name = "bld-testng";
-        version = version(0, 9, 7);
+        version = version(0, 9, 8);
 
         javaRelease = 17;
+        
         downloadSources = true;
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
@@ -47,7 +48,7 @@ public class TestNgOperationBuild extends Project {
                 .include(dependency("com.uwyn.rife2", "bld", version(1, 9, 0)));
 
         scope(test)
-                .include(dependency("org.testng", "testng", version(7, 10, 1)))
+                .include(dependency("org.testng", "testng", version(7, 10, 2)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 10, 2)))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 10, 2)))
                 .include(dependency("org.assertj", "assertj-core", version(3, 25, 3)));
