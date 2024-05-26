@@ -18,8 +18,10 @@ package rife.bld.extension;
 
 import org.junit.jupiter.api.Test;
 import rife.bld.Project;
+import rife.bld.blueprints.BaseProjectBlueprint;
 import rife.bld.operations.exceptions.ExitStatusException;
 
+import java.io.File;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -42,6 +44,104 @@ class TestNgOperationTest {
 
         op = new TestNgOperation().alwaysRunListeners(true);
         assertThat(op.options.get("-alwaysrunlisteners")).isEqualTo("true");
+    }
+
+    @Test
+    void testCheckAll() {
+        var params = List.of(
+                "-configfailurepolicy",
+                "-d",
+                "-dataproviderthreadcount",
+                "-dependencyinjectorfactory",
+                "-excludegroups",
+                "-failwheneverythingskipped",
+                "-generateResultsPerSuite",
+                "-groups",
+                "-ignoreMissedTestNames",
+                "-includeAllDataDrivenTestsWhenSkipping",
+                "-listener",
+                "-listenercomparator",
+                "-listenerfactory",
+                "-log",
+                "-verbose",
+                "-methods",
+                "-methodselectors",
+                "-mixed",
+                "-objectfactory",
+                "-overrideincludedmethods",
+                "-parallel",
+                "-propagateDataProviderFailureAsTestFailure",
+                "-reporter",
+                "-shareThreadPoolForDataProviders",
+                "-spilistenerstoskip",
+                "-suitename",
+                "-suitethreadpoolsize",
+                "-testclass",
+                "-testjar",
+                "-testname",
+                "-testnames",
+                "-testrunfactory",
+                "-threadcount",
+                "-threadpoolfactoryclass",
+                "-usedefaultlisteners",
+                "-useGlobalThreadPool",
+                "-xmlpathinjar",
+                "-alwaysrunlisteners"
+        );
+
+        var args = new TestNgOperation()
+                .fromProject(new BaseProjectBlueprint(new File("examples"), "com.example", "Examples"))
+                .failurePolicy(TestNgOperation.FailurePolicy.SKIP)
+                .directory("dir")
+                .dataProviderThreadCount(1)
+                .dependencyInjectorFactory("injectorfactory")
+                .excludeGroups("group")
+                .failWhenEverythingSkipped(true)
+                .generateResultsPerSuite(true)
+                .groups("group1", "group2")
+                .ignoreMissedTestName(true)
+                .includeAllDataDrivenTestsWhenSkipping(true)
+                .listener("listener")
+                .listenerComparator("comparator")
+                .listenerFactory("factory")
+                .log(1)
+                .verbose(1)
+                .methods("methods")
+                .methodSelectors("selector")
+                .mixed(true)
+                .objectFactory("objectFactory")
+                .overrideIncludedMethods("method")
+                .parallel(TestNgOperation.Parallel.TESTS)
+                .propagateDataProviderFailureAsTestFailure(true)
+                .reporter("reporter")
+                .shareThreadPoolForDataProviders(true)
+                .spiListenersToSkip("listenter")
+                .suiteName("name")
+                .suiteThreadPoolSize(1)
+                .testClass("class")
+                .testJar("jar")
+                .testName("name")
+                .testNames("names")
+                .testRunFactory("runFactory")
+                .threadCount(1)
+                .threadPoolFactoryClass("poolClass")
+                .useDefaultListeners(true)
+                .useGlobalThreadPool(true)
+                .xmlPathInJar("jarPath")
+                .alwaysRunListeners(true)
+                .executeConstructProcessCommandList();
+
+        for (var p : params) {
+            var found = false;
+            for (var a : args) {
+                if (a.startsWith(p)) {
+                    found = true;
+                    break;
+                }
+            }
+            assertThat(found).as(p + " not found.").isTrue();
+        }
+
     }
 
     @Test
