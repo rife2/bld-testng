@@ -47,8 +47,9 @@ class TestNgOperationTest {
     }
 
     @Test
-    void testCheckAll() {
+    void testCheckAllParameters() {
         var params = List.of(
+                "-alwaysrunlisteners",
                 "-configfailurepolicy",
                 "-d",
                 "-dataproviderthreadcount",
@@ -63,7 +64,6 @@ class TestNgOperationTest {
                 "-listenercomparator",
                 "-listenerfactory",
                 "-log",
-                "-verbose",
                 "-methods",
                 "-methodselectors",
                 "-mixed",
@@ -85,18 +85,19 @@ class TestNgOperationTest {
                 "-threadpoolfactoryclass",
                 "-usedefaultlisteners",
                 "-useGlobalThreadPool",
-                "-xmlpathinjar",
-                "-alwaysrunlisteners"
+                "-verbose",
+                "-xmlpathinjar"
         );
 
         var args = new TestNgOperation()
                 .fromProject(new BaseProjectBlueprint(new File("examples"), "com.example", "Examples"))
-                .failurePolicy(TestNgOperation.FailurePolicy.SKIP)
-                .directory("dir")
+                .alwaysRunListeners(true)
                 .dataProviderThreadCount(1)
                 .dependencyInjectorFactory("injectorfactory")
+                .directory("dir")
                 .excludeGroups("group")
                 .failWhenEverythingSkipped(true)
+                .failurePolicy(TestNgOperation.FailurePolicy.SKIP)
                 .generateResultsPerSuite(true)
                 .groups("group1", "group2")
                 .ignoreMissedTestName(true)
@@ -105,9 +106,8 @@ class TestNgOperationTest {
                 .listenerComparator("comparator")
                 .listenerFactory("factory")
                 .log(1)
-                .verbose(1)
-                .methods("methods")
                 .methodSelectors("selector")
+                .methods("methods")
                 .mixed(true)
                 .objectFactory("objectFactory")
                 .overrideIncludedMethods("method")
@@ -127,8 +127,8 @@ class TestNgOperationTest {
                 .threadPoolFactoryClass("poolClass")
                 .useDefaultListeners(true)
                 .useGlobalThreadPool(true)
+                .verbose(1)
                 .xmlPathInJar("jarPath")
-                .alwaysRunListeners(true)
                 .executeConstructProcessCommandList();
 
         for (var p : params) {
