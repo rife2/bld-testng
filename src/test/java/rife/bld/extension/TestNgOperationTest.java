@@ -53,6 +53,8 @@ class TestNgOperationTest {
     void testCheckAllParameters() throws IOException {
         var args = Files.readAllLines(Paths.get("src", "test", "resources", "testng-args.txt"));
 
+        assertThat(args).isNotEmpty();
+
         var params = new TestNgOperation()
                 .fromProject(new BaseProjectBlueprint(new File("examples"), "com.example", "Examples"))
                 .alwaysRunListeners(true)
