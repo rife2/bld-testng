@@ -22,6 +22,9 @@ import rife.bld.blueprints.BaseProjectBlueprint;
 import rife.bld.operations.exceptions.ExitStatusException;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -47,49 +50,10 @@ class TestNgOperationTest {
     }
 
     @Test
-    void testCheckAllParameters() {
-        var params = List.of(
-                "-alwaysrunlisteners",
-                "-configfailurepolicy",
-                "-d",
-                "-dataproviderthreadcount",
-                "-dependencyinjectorfactory",
-                "-excludegroups",
-                "-failwheneverythingskipped",
-                "-generateResultsPerSuite",
-                "-groups",
-                "-ignoreMissedTestNames",
-                "-includeAllDataDrivenTestsWhenSkipping",
-                "-listener",
-                "-listenercomparator",
-                "-listenerfactory",
-                "-log",
-                "-methods",
-                "-methodselectors",
-                "-mixed",
-                "-objectfactory",
-                "-overrideincludedmethods",
-                "-parallel",
-                "-propagateDataProviderFailureAsTestFailure",
-                "-reporter",
-                "-shareThreadPoolForDataProviders",
-                "-spilistenerstoskip",
-                "-suitename",
-                "-suitethreadpoolsize",
-                "-testclass",
-                "-testjar",
-                "-testname",
-                "-testnames",
-                "-testrunfactory",
-                "-threadcount",
-                "-threadpoolfactoryclass",
-                "-usedefaultlisteners",
-                "-useGlobalThreadPool",
-                "-verbose",
-                "-xmlpathinjar"
-        );
+    void testCheckAllParameters() throws IOException {
+        var args = Files.readAllLines(Paths.get("src", "test", "resources", "testng-args.txt"));
 
-        var args = new TestNgOperation()
+        var params = new TestNgOperation()
                 .fromProject(new BaseProjectBlueprint(new File("examples"), "com.example", "Examples"))
                 .alwaysRunListeners(true)
                 .dataProviderThreadCount(1)
@@ -131,9 +95,9 @@ class TestNgOperationTest {
                 .xmlPathInJar("jarPath")
                 .executeConstructProcessCommandList();
 
-        for (var p : params) {
+        for (var p : args) {
             var found = false;
-            for (var a : args) {
+            for (var a : params) {
                 if (a.startsWith(p)) {
                     found = true;
                     break;
