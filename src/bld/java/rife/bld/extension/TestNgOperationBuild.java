@@ -37,7 +37,7 @@ public class TestNgOperationBuild extends Project {
         version = version(0, 9, 9, "SNAPSHOT");
 
         javaRelease = 17;
-        
+
         downloadSources = true;
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_CENTRAL, RIFE2_RELEASES);
@@ -100,5 +100,14 @@ public class TestNgOperationBuild extends Project {
                 .failOnViolation(true)
                 .ruleSets("config/pmd.xml")
                 .execute();
+    }
+
+    @Override
+    public void test() throws Exception {
+        new ExecOperation()
+                .fromProject(this)
+                .command("scripts/cliargs.sh")
+                .execute();
+        super.test();
     }
 }
