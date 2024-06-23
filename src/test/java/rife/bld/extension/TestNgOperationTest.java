@@ -43,10 +43,10 @@ class TestNgOperationTest {
     @Test
     void testAlwaysRunListeners() {
         var op = new TestNgOperation().alwaysRunListeners(false);
-        assertThat(op.options.get("-alwaysrunlisteners")).isEqualTo("false");
+        assertThat(op.options().get("-alwaysrunlisteners")).isEqualTo("false");
 
         op = new TestNgOperation().alwaysRunListeners(true);
-        assertThat(op.options.get("-alwaysrunlisteners")).isEqualTo("true");
+        assertThat(op.options().get("-alwaysrunlisteners")).isEqualTo("true");
     }
 
     @Test
@@ -113,38 +113,44 @@ class TestNgOperationTest {
     @Test
     void testClass() {
         var op = new TestNgOperation().testClass(FOO, BAR);
-        assertThat(op.options.get("-testclass")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options().get("-testclass")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         new TestNgOperation().testClass(List.of(FOO, BAR));
-        assertThat(op.options.get("-testclass")).as("as list")
+        assertThat(op.options().get("-testclass")).as("as list")
                 .isEqualTo(String.format("%s,%s", FOO, BAR));
+    }
+
+    @Test
+    void testClasspath() {
+        var op = new TestNgOperation().testClasspath(FOO, BAR);
+        assertThat(op.testClasspath()).containsExactly(BAR, FOO);
     }
 
     @Test
     void testDataProviderThreadCount() {
         var op = new TestNgOperation().dataProviderThreadCount(1);
-        assertThat(op.options.get("-dataproviderthreadcount")).isEqualTo("1");
+        assertThat(op.options().get("-dataproviderthreadcount")).isEqualTo("1");
     }
 
     @Test
     void testDependencyInjectorFactory() {
         var op = new TestNgOperation().dependencyInjectorFactory(FOO);
-        assertThat(op.options.get("-dependencyinjectorfactory")).isEqualTo(FOO);
+        assertThat(op.options().get("-dependencyinjectorfactory")).isEqualTo(FOO);
     }
 
     @Test
     void testDirectory() {
         var op = new TestNgOperation().directory(FOO);
-        assertThat(op.options.get("-d")).isEqualTo(FOO);
+        assertThat(op.options().get("-d")).isEqualTo(FOO);
     }
 
     @Test
     void testExcludeGroups() {
         var op = new TestNgOperation().excludeGroups(FOO, BAR);
-        assertThat(op.options.get("-excludegroups")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options().get("-excludegroups")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         op = new TestNgOperation().excludeGroups(List.of(FOO, BAR));
-        assertThat(op.options.get("-excludegroups")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options().get("-excludegroups")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
     }
 
     @Test
@@ -201,276 +207,280 @@ class TestNgOperationTest {
     @Test
     void testFailWheneverEverythingSkipped() {
         var op = new TestNgOperation().failWhenEverythingSkipped(false);
-        assertThat(op.options.get("-failwheneverythingskipped")).isEqualTo("false");
+        assertThat(op.options().get("-failwheneverythingskipped")).isEqualTo("false");
 
         op = new TestNgOperation().failWhenEverythingSkipped(true);
-        assertThat(op.options.get("-failwheneverythingskipped")).isEqualTo("true");
+        assertThat(op.options().get("-failwheneverythingskipped")).isEqualTo("true");
     }
 
     @Test
     void testFailurePolicy() {
         var op = new TestNgOperation().failurePolicy(TestNgOperation.FailurePolicy.CONTINUE);
-        assertThat(op.options.get("-configfailurepolicy")).isEqualTo("continue");
+        assertThat(op.options().get("-configfailurepolicy")).isEqualTo("continue");
 
         op = new TestNgOperation().failurePolicy(TestNgOperation.FailurePolicy.SKIP);
-        assertThat(op.options.get("-configfailurepolicy")).isEqualTo("skip");
+        assertThat(op.options().get("-configfailurepolicy")).isEqualTo("skip");
     }
 
     @Test
     void testGenerateResultsPerSuite() {
         var op = new TestNgOperation().generateResultsPerSuite(false);
-        assertThat(op.options.get("-generateResultsPerSuite")).isEqualTo("false");
+        assertThat(op.options().get("-generateResultsPerSuite")).isEqualTo("false");
 
         op = new TestNgOperation().generateResultsPerSuite(true);
-        assertThat(op.options.get("-generateResultsPerSuite")).isEqualTo("true");
+        assertThat(op.options().get("-generateResultsPerSuite")).isEqualTo("true");
     }
 
     @Test
     void testGroups() {
         var op = new TestNgOperation().groups(FOO, BAR);
-        assertThat(op.options.get("-groups")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options().get("-groups")).isEqualTo(String.format("%s,%s", FOO, BAR));
+
+        op.groups(List.of("group3", "group4"));
+        assertThat(op.options().get("-groups")).isEqualTo("group3,group4");
+
     }
 
     @Test
     void testIgnoreMissedTestName() {
         var op = new TestNgOperation().ignoreMissedTestName(false);
-        assertThat(op.options.get("-ignoreMissedTestNames")).isEqualTo("false");
+        assertThat(op.options().get("-ignoreMissedTestNames")).isEqualTo("false");
 
         op = new TestNgOperation().ignoreMissedTestName(true);
-        assertThat(op.options.get("-ignoreMissedTestNames")).isEqualTo("true");
+        assertThat(op.options().get("-ignoreMissedTestNames")).isEqualTo("true");
     }
 
     @Test
     void testIncludeAllDataDrivenTestsWhenSkipping() {
         var op = new TestNgOperation().includeAllDataDrivenTestsWhenSkipping(false);
-        assertThat(op.options.get("-includeAllDataDrivenTestsWhenSkipping")).isEqualTo("false");
+        assertThat(op.options().get("-includeAllDataDrivenTestsWhenSkipping")).isEqualTo("false");
 
         op = new TestNgOperation().includeAllDataDrivenTestsWhenSkipping(true);
-        assertThat(op.options.get("-includeAllDataDrivenTestsWhenSkipping")).isEqualTo("true");
+        assertThat(op.options().get("-includeAllDataDrivenTestsWhenSkipping")).isEqualTo("true");
     }
 
     @Test
     void testJar() {
         var op = new TestNgOperation().testJar(FOO);
-        assertThat(op.options.get("-testjar")).isEqualTo(FOO);
+        assertThat(op.options().get("-testjar")).isEqualTo(FOO);
     }
 
     @Test
     void testJunit() {
         var op = new TestNgOperation().jUnit(false);
-        assertThat(op.options.get("-junit")).isEqualTo("false");
+        assertThat(op.options().get("-junit")).isEqualTo("false");
 
         op = new TestNgOperation().jUnit(true);
-        assertThat(op.options.get("-junit")).isEqualTo("true");
+        assertThat(op.options().get("-junit")).isEqualTo("true");
     }
 
     @Test
     void testListener() {
         var ops = new TestNgOperation().listener(FOO, BAR);
-        assertThat(ops.options.get("-listener")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(ops.options().get("-listener")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         ops = new TestNgOperation().listener(List.of(FOO, BAR));
-        assertThat(ops.options.get("-listener")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(ops.options().get("-listener")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
     }
 
     @Test
     void testMethodDetectors() {
         var op = new TestNgOperation().methodSelectors(FOO, BAR);
-        assertThat(op.options.get("-methodselectors")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options().get("-methodselectors")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         op = new TestNgOperation().methodSelectors(List.of(FOO, BAR));
-        assertThat(op.options.get("-methodselectors")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options().get("-methodselectors")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
     }
 
     @Test
     void testMethods() {
         var op = new TestNgOperation().methods(FOO, BAR);
-        assertThat(op.options.get("-methods")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options().get("-methods")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         new TestNgOperation().methods(List.of(FOO, BAR));
-        assertThat(op.options.get("-methods")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.options().get("-methods")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
     }
 
     @Test
     void testMixed() {
         var op = new TestNgOperation().mixed(false);
-        assertThat(op.options.get("-mixed")).isEqualTo("false");
+        assertThat(op.options().get("-mixed")).isEqualTo("false");
 
         op = new TestNgOperation().mixed(true);
-        assertThat(op.options.get("-mixed")).isEqualTo("true");
+        assertThat(op.options().get("-mixed")).isEqualTo("true");
     }
 
     @Test
     void testName() {
         var op = new TestNgOperation().testName(FOO);
-        assertThat(op.options.get("-testname")).isEqualTo("\"" + FOO + '\"');
+        assertThat(op.options().get("-testname")).isEqualTo("\"" + FOO + '\"');
     }
 
     @Test
     void testNames() {
         var ops = new TestNgOperation().testNames(FOO, BAR);
-        assertThat(ops.options.get("-testnames")).isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
+        assertThat(ops.options().get("-testnames")).isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
 
         new TestNgOperation().testNames(List.of(FOO, BAR));
-        assertThat(ops.options.get("-testnames")).as("as list").isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
+        assertThat(ops.options().get("-testnames")).as("as list").isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
     }
 
     @Test
     void testObjectFactory() {
         var ops = new TestNgOperation().objectFactory(FOO, BAR);
-        assertThat(ops.options.get("-objectfactory")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(ops.options().get("-objectfactory")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         ops = new TestNgOperation().objectFactory(List.of(FOO, BAR));
-        assertThat(ops.options.get("-objectfactory")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(ops.options().get("-objectfactory")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
     }
 
     @Test
     void testOverrideIncludedMethods() {
         var ops = new TestNgOperation().overrideIncludedMethods(FOO, BAR);
-        assertThat(ops.options.get("-overrideincludedmethods")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(ops.options().get("-overrideincludedmethods")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         ops = new TestNgOperation().overrideIncludedMethods(List.of(FOO, BAR));
-        assertThat(ops.options.get("-overrideincludedmethods")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(ops.options().get("-overrideincludedmethods")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
     }
 
     @Test
     void testPackages() {
         var op = new TestNgOperation().packages(FOO, BAR);
-        assertThat(op.packages).contains(FOO).contains(BAR);
+        assertThat(op.packages()).contains(FOO).contains(BAR);
 
         op = new TestNgOperation().packages(List.of(FOO, BAR));
-        assertThat(op.packages).as("as list").contains(FOO).contains(BAR);
+        assertThat(op.packages()).as("as list").contains(FOO).contains(BAR);
     }
 
     @Test
     void testParallel() {
         var op = new TestNgOperation().parallel(TestNgOperation.Parallel.TESTS);
-        assertThat(op.options.get("-parallel")).isEqualTo("tests");
+        assertThat(op.options().get("-parallel")).isEqualTo("tests");
 
         op = new TestNgOperation().parallel(TestNgOperation.Parallel.METHODS);
-        assertThat(op.options.get("-parallel")).isEqualTo("methods");
+        assertThat(op.options().get("-parallel")).isEqualTo("methods");
 
         op = new TestNgOperation().parallel(TestNgOperation.Parallel.CLASSES);
-        assertThat(op.options.get("-parallel")).isEqualTo("classes");
+        assertThat(op.options().get("-parallel")).isEqualTo("classes");
     }
 
     @Test
     void testPort() {
         var op = new TestNgOperation().port(1);
-        assertThat(op.options.get("-port")).isEqualTo("1");
+        assertThat(op.options().get("-port")).isEqualTo("1");
     }
 
     @Test
     void testPropagateDataProviderFailureAsTestFailure() {
         var op = new TestNgOperation().propagateDataProviderFailureAsTestFailure(false);
-        assertThat(op.options.get("-propagateDataProviderFailureAsTestFailure")).isEqualTo("false");
+        assertThat(op.options().get("-propagateDataProviderFailureAsTestFailure")).isEqualTo("false");
 
         op = new TestNgOperation().propagateDataProviderFailureAsTestFailure(true);
-        assertThat(op.options.get("-propagateDataProviderFailureAsTestFailure")).isEqualTo("true");
+        assertThat(op.options().get("-propagateDataProviderFailureAsTestFailure")).isEqualTo("true");
     }
 
     @Test
     void testReported() {
         var op = new TestNgOperation().reporter(FOO);
-        assertThat(op.options.get("-reporter")).isEqualTo(FOO);
+        assertThat(op.options().get("-reporter")).isEqualTo(FOO);
     }
 
     @Test
     void testRunFactory() {
         var op = new TestNgOperation().testRunFactory(FOO);
-        assertThat(op.options.get("-testrunfactory")).isEqualTo(FOO);
+        assertThat(op.options().get("-testrunfactory")).isEqualTo(FOO);
     }
 
     @Test
     void testShareThreadPoolForDataProviders() {
         var op = new TestNgOperation().shareThreadPoolForDataProviders(true);
-        assertThat(op.options.get("-shareThreadPoolForDataProviders")).isEqualTo("true");
+        assertThat(op.options().get("-shareThreadPoolForDataProviders")).isEqualTo("true");
 
         op = new TestNgOperation().shareThreadPoolForDataProviders(false);
-        assertThat(op.options.get("-shareThreadPoolForDataProviders")).isNull();
+        assertThat(op.options().get("-shareThreadPoolForDataProviders")).isNull();
     }
 
     @Test
     void testSourceDir() {
         var op = new TestNgOperation().sourceDir(FOO, BAR);
-        assertThat(op.options.get("-sourcedir")).isEqualTo(String.format("%s;%s", FOO, BAR));
+        assertThat(op.options().get("-sourcedir")).isEqualTo(String.format("%s;%s", FOO, BAR));
 
         op = new TestNgOperation().sourceDir(List.of(FOO, BAR));
-        assertThat(op.options.get("-sourcedir")).as("as list").isEqualTo(String.format("%s;%s", FOO, BAR));
+        assertThat(op.options().get("-sourcedir")).as("as list").isEqualTo(String.format("%s;%s", FOO, BAR));
     }
 
     @Test
     void testSpiListenersToSkip() {
         var ops = new TestNgOperation().spiListenersToSkip(FOO, BAR);
-        assertThat(ops.options.get("-spilistenerstoskip")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(ops.options().get("-spilistenerstoskip")).isEqualTo(String.format("%s,%s", FOO, BAR));
 
         ops = new TestNgOperation().spiListenersToSkip(List.of(FOO, BAR));
-        assertThat(ops.options.get("-spilistenerstoskip")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(ops.options().get("-spilistenerstoskip")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
     }
 
     @Test
     void testSuiteName() {
         var op = new TestNgOperation().suiteName(FOO);
-        assertThat(op.options.get("-suitename")).isEqualTo("\"" + FOO + '\"');
+        assertThat(op.options().get("-suitename")).isEqualTo("\"" + FOO + '\"');
     }
 
     @Test
     void testSuiteThreadPoolSize() {
         var op = new TestNgOperation().suiteThreadPoolSize(1);
-        assertThat(op.options.get("-suitethreadpoolsize")).isEqualTo("1");
+        assertThat(op.options().get("-suitethreadpoolsize")).isEqualTo("1");
     }
 
     @Test
     void testSuites() {
         var op = new TestNgOperation().suites(FOO, BAR);
-        assertThat(op.suites).contains(FOO).contains(BAR);
+        assertThat(op.suites()).contains(FOO).contains(BAR);
 
         op = new TestNgOperation().suites(List.of(FOO, BAR));
-        assertThat(op.suites).as("as list").contains(FOO).contains(BAR);
+        assertThat(op.suites()).as("as list").contains(FOO).contains(BAR);
     }
 
     @Test
     void testThreadCount() {
         var op = new TestNgOperation().threadCount(1);
-        assertThat(op.options.get("-threadcount")).isEqualTo("1");
+        assertThat(op.options().get("-threadcount")).isEqualTo("1");
     }
 
     @Test
     void testThreadPoolFactoryClass() {
         var op = new TestNgOperation().threadPoolFactoryClass(FOO);
-        assertThat(op.options.get("-threadpoolfactoryclass")).isEqualTo(FOO);
+        assertThat(op.options().get("-threadpoolfactoryclass")).isEqualTo(FOO);
     }
 
     @Test
     void testUseDefaultListeners() {
         var op = new TestNgOperation().useDefaultListeners(false);
-        assertThat(op.options.get("-usedefaultlisteners")).isEqualTo("false");
+        assertThat(op.options().get("-usedefaultlisteners")).isEqualTo("false");
 
         op = new TestNgOperation().useDefaultListeners(true);
-        assertThat(op.options.get("-usedefaultlisteners")).isEqualTo("true");
+        assertThat(op.options().get("-usedefaultlisteners")).isEqualTo("true");
     }
 
     @Test
     void testUseGlobalThreadPool() {
         var op = new TestNgOperation().useGlobalThreadPool(true);
-        assertThat(op.options.get("-useGlobalThreadPool")).isEqualTo("true");
+        assertThat(op.options().get("-useGlobalThreadPool")).isEqualTo("true");
 
         op = new TestNgOperation().useGlobalThreadPool(false);
-        assertThat(op.options.get("-useGlobalThreadPool")).isNull();
+        assertThat(op.options().get("-useGlobalThreadPool")).isNull();
     }
 
     @Test
     void testVerbose() {
         var op = new TestNgOperation().log(1);
-        assertThat(op.options.get("-log")).isEqualTo("1");
+        assertThat(op.options().get("-log")).isEqualTo("1");
 
         op = new TestNgOperation().verbose(1);
-        assertThat(op.options.get("-verbose")).isEqualTo("1");
+        assertThat(op.options().get("-verbose")).isEqualTo("1");
     }
 
     @Test
     void testXmlPathInJar() {
         var op = new TestNgOperation().xmlPathInJar(FOO);
-        assertThat(op.options.get("-xmlpathinjar")).isEqualTo(FOO);
+        assertThat(op.options().get("-xmlpathinjar")).isEqualTo(FOO);
     }
 }

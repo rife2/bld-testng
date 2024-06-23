@@ -40,22 +40,22 @@ import java.util.stream.Collectors;
 public class TestNgOperation extends TestOperation<TestNgOperation, List<String>> {
     private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
     /**
+     * The classpath entries used for running tests.
+     */
+    private final Set<String> testClasspath_ = new HashSet<>();
+    /**
      * The run options.
      */
-    protected final Map<String, String> options = new ConcurrentHashMap<>();
+    private final Map<String, String> options_ = new ConcurrentHashMap<>();
     /**
      * The suite packages to run.
      */
-    protected final Set<String> packages = new HashSet<>();
+    private final Set<String> packages_ = new HashSet<>();
     /**
      * The suites to run.
      */
-    protected final Set<String> suites = new HashSet<>();
-    /**
-     * The classpath entries used for running tests.
-     */
-    protected final Set<String> testClasspath = new HashSet<>();
-    private BaseProject project;
+    private final Set<String> suites_ = new HashSet<>();
+    private BaseProject project_;
 
     /**
      * Should Method Invocation Listeners be run even for skipped methods.
@@ -66,7 +66,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation alwaysRunListeners(Boolean isAlwaysRunListeners) {
-        options.put("-alwaysrunlisteners", String.valueOf(isAlwaysRunListeners));
+        options_.put("-alwaysrunlisteners", String.valueOf(isAlwaysRunListeners));
         return this;
     }
 
@@ -80,7 +80,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation dataProviderThreadCount(int count) {
         if (count >= 0) {
-            options.put("-dataproviderthreadcount", String.valueOf(count));
+            options_.put("-dataproviderthreadcount", String.valueOf(count));
         }
         return this;
     }
@@ -93,7 +93,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation dependencyInjectorFactory(String injectorFactory) {
         if (isNotBlank(injectorFactory)) {
-            options.put("-dependencyinjectorfactory", injectorFactory);
+            options_.put("-dependencyinjectorfactory", injectorFactory);
         }
         return this;
     }
@@ -108,7 +108,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation directory(String directoryPath) {
         if (isNotBlank(directoryPath)) {
-            options.put("-d", directoryPath);
+            options_.put("-d", directoryPath);
         }
         return this;
     }
@@ -121,7 +121,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #excludeGroups(Collection) #excludeGroups(Collection)
      */
     public TestNgOperation excludeGroups(String... group) {
-        options.put("-excludegroups", String.join(",", Arrays.stream(group).filter(this::isNotBlank).toList()));
+        options_.put("-excludegroups", String.join(",", Arrays.stream(group).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -133,7 +133,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #excludeGroups(String...) #excludeGroups(String...)
      */
     public TestNgOperation excludeGroups(Collection<String> group) {
-        options.put("-excludegroups", String.join(",", group.stream().filter(this::isNotBlank).toList()));
+        options_.put("-excludegroups", String.join(",", group.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -144,39 +144,39 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     @Override
     protected List<String> executeConstructProcessCommandList() {
-        if (project == null) {
+        if (project_ == null) {
             LOGGER.severe("A project must be specified.");
-        } else if (packages.isEmpty() && suites.isEmpty()) {
+        } else if (packages_.isEmpty() && suites_.isEmpty()) {
             LOGGER.severe("At least one package or XML suite is required.");
         }
 
-        if (!options.containsKey("-d")) {
-            options.put("-d", Path.of(project.buildDirectory().getPath(), "test-output").toString());
+        if (!options_.containsKey("-d")) {
+            options_.put("-d", Path.of(project_.buildDirectory().getPath(), "test-output").toString());
         }
 
         final List<String> args = new ArrayList<>();
         args.add(javaTool());
-        args.addAll(this.javaOptions());
+        args.addAll(javaOptions());
 
         args.add("-cp");
-        if (testClasspath.isEmpty()) {
-            args.add(String.format("%s:%s:%s:%s", Path.of(project.libTestDirectory().getPath(), "*"),
-                    Path.of(project.libCompileDirectory().getPath(), "*"), project.buildMainDirectory(),
-                    project.buildTestDirectory()));
+        if (testClasspath_.isEmpty()) {
+            args.add(String.format("%s:%s:%s:%s", Path.of(project_.libTestDirectory().getPath(), "*"),
+                    Path.of(project_.libCompileDirectory().getPath(), "*"), project_.buildMainDirectory(),
+                    project_.buildTestDirectory()));
         } else {
-            args.add(String.join(":", testClasspath));
+            args.add(String.join(":", testClasspath_));
         }
 
         args.add("org.testng.TestNG");
 
-        options.forEach((k, v) -> {
+        options_.forEach((k, v) -> {
             args.add(k);
             args.add(v);
         });
 
-        if (!suites.isEmpty()) {
-            args.addAll(suites);
-        } else if (!options.containsKey("-testclass")) {
+        if (!suites_.isEmpty()) {
+            args.addAll(suites_);
+        } else if (!options_.containsKey("-testclass")) {
             try {
                 args.add(writeDefaultSuite().getPath());
             } catch (IOException ioe) {
@@ -190,7 +190,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info(String.format("Report will be saved in file://%s",
-                    new File(options.get("-d")).toURI().getPath()));
+                    new File(options_.get("-d")).toURI().getPath()));
         }
 
         return args;
@@ -204,7 +204,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     @Override
     public TestNgOperation fromProject(BaseProject project) {
-        this.project = project;
+        project_ = project;
         directory(Path.of(project.buildDirectory().getPath(), "test-output").toString());
         return this;
     }
@@ -216,7 +216,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation failWhenEverythingSkipped(Boolean isFailAllSkipped) {
-        options.put("-failwheneverythingskipped", String.valueOf(isFailAllSkipped));
+        options_.put("-failwheneverythingskipped", String.valueOf(isFailAllSkipped));
         return this;
     }
 
@@ -228,7 +228,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation failurePolicy(FailurePolicy policy) {
-        options.put("-configfailurepolicy", policy.name().toLowerCase(Locale.getDefault()));
+        options_.put("-configfailurepolicy", policy.name().toLowerCase(Locale.getDefault()));
         return this;
     }
 
@@ -242,7 +242,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation generateResultsPerSuite(Boolean resultsPerSuite) {
-        options.put("-generateResultsPerSuite", String.valueOf(resultsPerSuite));
+        options_.put("-generateResultsPerSuite", String.valueOf(resultsPerSuite));
         return this;
     }
 
@@ -256,7 +256,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #groups(Collection) #groups(Collection)
      */
     public TestNgOperation groups(String... group) {
-        options.put("-groups", String.join(",", Arrays.stream(group).filter(this::isNotBlank).toList()));
+        options_.put("-groups", String.join(",", Arrays.stream(group).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -270,7 +270,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #groups(String...) #groups(String...)
      */
     public TestNgOperation groups(Collection<String> group) {
-        options.put("-groups", String.join(",", group.stream().filter(this::isNotBlank).toList()));
+        options_.put("-groups", String.join(",", group.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -284,7 +284,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation ignoreMissedTestName(Boolean isIgnoreMissedTestNames) {
-        options.put("-ignoreMissedTestNames", String.valueOf(isIgnoreMissedTestNames));
+        options_.put("-ignoreMissedTestNames", String.valueOf(isIgnoreMissedTestNames));
         return this;
     }
 
@@ -297,7 +297,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation includeAllDataDrivenTestsWhenSkipping(Boolean isIncludeDrivenTestsWhenSkipping) {
-        options.put("-includeAllDataDrivenTestsWhenSkipping", String.valueOf(isIncludeDrivenTestsWhenSkipping));
+        options_.put("-includeAllDataDrivenTestsWhenSkipping", String.valueOf(isIncludeDrivenTestsWhenSkipping));
         return this;
     }
 
@@ -317,7 +317,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation jUnit(Boolean isJunit) {
-        options.put("-junit", String.valueOf(isJunit));
+        options_.put("-junit", String.valueOf(isJunit));
         return this;
     }
 
@@ -330,7 +330,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #listener(Collection) #listener(Collection)
      */
     public TestNgOperation listener(String... listener) {
-        options.put("-listener", String.join(",", Arrays.stream(listener).filter(this::isNotBlank).toList()));
+        options_.put("-listener", String.join(",", Arrays.stream(listener).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -343,7 +343,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #listener(String...) #listener(String...)
      */
     public TestNgOperation listener(Collection<String> listener) {
-        options.put("-listener", String.join(",", listener.stream().filter(this::isNotBlank).toList()));
+        options_.put("-listener", String.join(",", listener.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -355,7 +355,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation listenerComparator(String listenerComparator) {
-        options.put("-listenercomparator", listenerComparator);
+        options_.put("-listenercomparator", listenerComparator);
         return this;
     }
 
@@ -366,7 +366,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation listenerFactory(String listenerFactory) {
-        options.put("-listenerfactory", listenerFactory);
+        options_.put("-listenerfactory", listenerFactory);
         return this;
     }
 
@@ -379,7 +379,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation log(int level) {
         if (level >= 0) {
-            options.put("-log", String.valueOf(level));
+            options_.put("-log", String.valueOf(level));
         }
         return this;
     }
@@ -394,7 +394,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #methodSelectors(Collection) #methodSelectors(Collection)
      */
     public TestNgOperation methodSelectors(String... selector) {
-        options.put("-methodselectors",
+        options_.put("-methodselectors",
                 String.join(",", Arrays.stream(selector).filter(this::isNotBlank).toList()));
         return this;
     }
@@ -409,7 +409,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #methodSelectors(String...) #methodSelectors(String...)
      */
     public TestNgOperation methodSelectors(Collection<String> selector) {
-        options.put("-methodselectors", String.join(",", selector.stream().filter(this::isNotBlank).toList()));
+        options_.put("-methodselectors", String.join(",", selector.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -423,7 +423,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #methods(Collection) #methods(Collection)
      */
     public TestNgOperation methods(String... method) {
-        options.put("-methods", String.join(",", Arrays.stream(method).filter(this::isNotBlank).toList()));
+        options_.put("-methods", String.join(",", Arrays.stream(method).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -437,7 +437,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #methods(String...) #methods(String...)
      */
     public TestNgOperation methods(Collection<String> method) {
-        options.put("-methods", String.join(",", method.stream().filter(this::isNotBlank).toList()));
+        options_.put("-methods", String.join(",", method.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -450,7 +450,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation mixed(Boolean isMixed) {
-        options.put("-mixed", String.valueOf(isMixed));
+        options_.put("-mixed", String.valueOf(isMixed));
         return this;
     }
 
@@ -462,7 +462,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation objectFactory(String objectFactory) {
-        options.put("-objectfactory", objectFactory);
+        options_.put("-objectfactory", objectFactory);
         return this;
     }
 
@@ -474,7 +474,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #objectFactory(Collection) #objectFactory(Collection)
      */
     public TestNgOperation objectFactory(String... factory) {
-        options.put("-objectfactory", String.join(",", Arrays.stream(factory).filter(this::isNotBlank).toList()));
+        options_.put("-objectfactory", String.join(",", Arrays.stream(factory).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -486,8 +486,17 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #objectFactory(String...) #objectFactory(String...)
      */
     public TestNgOperation objectFactory(Collection<String> factory) {
-        options.put("-objectfactory", String.join(",", factory.stream().filter(this::isNotBlank).toList()));
+        options_.put("-objectfactory", String.join(",", factory.stream().filter(this::isNotBlank).toList()));
         return this;
+    }
+
+    /**
+     * Returns the run options.
+     *
+     * @return the map of run options
+     */
+    public Map<String, String> options() {
+        return options_;
     }
 
     /**
@@ -499,7 +508,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #overrideIncludedMethods(Collection) #overrideIncludedMethods(Collection)
      */
     public TestNgOperation overrideIncludedMethods(String... method) {
-        options.put("-overrideincludedmethods",
+        options_.put("-overrideincludedmethods",
                 String.join(",", Arrays.stream(method).filter(this::isNotBlank).toList()));
         return this;
     }
@@ -513,7 +522,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #overrideIncludedMethods(String...) #overrideIncludedMethods(String...)
      */
     public TestNgOperation overrideIncludedMethods(Collection<String> method) {
-        options.put("-overrideincludedmethods", String.join(",", method.stream().filter(this::isNotBlank).toList()));
+        options_.put("-overrideincludedmethods", String.join(",", method.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -529,7 +538,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #packages(Collection) #packages(Collection)
      */
     public TestNgOperation packages(String... name) {
-        packages.addAll(Arrays.stream(name).filter(this::isNotBlank).toList());
+        packages_.addAll(Arrays.stream(name).filter(this::isNotBlank).toList());
         return this;
     }
 
@@ -545,8 +554,17 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #packages(String...) #packages(String...)
      */
     public TestNgOperation packages(Collection<String> name) {
-        packages.addAll(name.stream().filter(this::isNotBlank).toList());
+        packages_.addAll(name.stream().filter(this::isNotBlank).toList());
         return this;
+    }
+
+    /**
+     * Returns the suite packages to run.
+     *
+     * @return the set of packages
+     */
+    public Set<String> packages() {
+        return packages_;
     }
 
     /**
@@ -559,7 +577,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see Parallel
      */
     public TestNgOperation parallel(Parallel mechanism) {
-        options.put("-parallel", mechanism.name().toLowerCase(Locale.getDefault()));
+        options_.put("-parallel", mechanism.name().toLowerCase(Locale.getDefault()));
         return this;
     }
 
@@ -571,7 +589,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation port(int port) {
         if (port >= 1) {
-            options.put("-port", String.valueOf(port));
+            options_.put("-port", String.valueOf(port));
         }
         return this;
     }
@@ -585,7 +603,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation propagateDataProviderFailureAsTestFailure(Boolean isPropagateDataProviderFailure) {
-        options.put("-propagateDataProviderFailureAsTestFailure", String.valueOf(isPropagateDataProviderFailure));
+        options_.put("-propagateDataProviderFailureAsTestFailure", String.valueOf(isPropagateDataProviderFailure));
         return this;
     }
 
@@ -597,7 +615,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation reporter(String reporter) {
         if (isNotBlank(reporter)) {
-            options.put("-reporter", reporter);
+            options_.put("-reporter", reporter);
         }
         return this;
     }
@@ -610,7 +628,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation shareThreadPoolForDataProviders(boolean shareThreadPoolForDataProviders) {
         if (shareThreadPoolForDataProviders) {
-            options.put("-shareThreadPoolForDataProviders", String.valueOf(shareThreadPoolForDataProviders));
+            options_.put("-shareThreadPoolForDataProviders", String.valueOf(shareThreadPoolForDataProviders));
         }
         return this;
     }
@@ -625,7 +643,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #sourceDir(String...) #sourceDir(String...)
      */
     public TestNgOperation sourceDir(String... directory) {
-        options.put("-sourcedir", String.join(";", Arrays.stream(directory).filter(this::isNotBlank).toList()));
+        options_.put("-sourcedir", String.join(";", Arrays.stream(directory).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -639,7 +657,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #sourceDir(String...) #sourceDir(String...)
      */
     public TestNgOperation sourceDir(Collection<String> directory) {
-        options.put("-sourcedir", String.join(";", directory.stream().filter(this::isNotBlank).toList()));
+        options_.put("-sourcedir", String.join(";", directory.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -652,7 +670,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #spiListenersToSkip(Collection) #spiListenersToSkip(Collection)
      */
     public TestNgOperation spiListenersToSkip(String... listenerToSkip) {
-        options.put("-spilistenerstoskip",
+        options_.put("-spilistenerstoskip",
                 String.join(",", Arrays.stream(listenerToSkip).filter(this::isNotBlank).toList()));
         return this;
     }
@@ -666,7 +684,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #spiListenersToSkip(String...) #spiListenersToSkip(String...)
      */
     public TestNgOperation spiListenersToSkip(Collection<String> listenerToSkip) {
-        options.put("-spilistenerstoskip",
+        options_.put("-spilistenerstoskip",
                 String.join(",", listenerToSkip.stream().filter(this::isNotBlank).toList()));
         return this;
     }
@@ -680,7 +698,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation suiteName(String name) {
         if (isNotBlank(name)) {
-            options.put("-suitename", '"' + name + '"');
+            options_.put("-suitename", '"' + name + '"');
         }
         return this;
     }
@@ -694,7 +712,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation suiteThreadPoolSize(int poolSize) {
         if (poolSize >= 0) {
-            options.put("-suitethreadpoolsize", String.valueOf(poolSize));
+            options_.put("-suitethreadpoolsize", String.valueOf(poolSize));
         }
         return this;
     }
@@ -709,7 +727,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #suites(Collection) #suites(Collection)
      */
     public TestNgOperation suites(String... suite) {
-        suites.addAll(Arrays.stream(suite).filter(this::isNotBlank).toList());
+        suites_.addAll(Arrays.stream(suite).filter(this::isNotBlank).toList());
         return this;
     }
 
@@ -723,8 +741,17 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #suites(String...) #suites(String...)
      */
     public TestNgOperation suites(Collection<String> suite) {
-        suites.addAll(suite.stream().filter(this::isNotBlank).toList());
+        suites_.addAll(suite.stream().filter(this::isNotBlank).toList());
         return this;
+    }
+
+    /**
+     * Returns the suites to run.
+     *
+     * @return the set of suites
+     */
+    public Set<String> suites() {
+        return suites_;
     }
 
     /**
@@ -748,7 +775,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testClass(Collection) #testClass(Collection)
      */
     public TestNgOperation testClass(String... aClass) {
-        options.put("-testclass", String.join(",", Arrays.stream(aClass).filter(this::isNotBlank).toList()));
+        options_.put("-testclass", String.join(",", Arrays.stream(aClass).filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -762,7 +789,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testClass(String...) #testClass(String...)
      */
     public TestNgOperation testClass(Collection<String> aClass) {
-        options.put("-testclass", String.join(",", aClass.stream().filter(this::isNotBlank).toList()));
+        options_.put("-testclass", String.join(",", aClass.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -774,7 +801,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testClasspath(String...) #testClasspath(String...)
      */
     public TestNgOperation testClasspath(String... entry) {
-        testClasspath.addAll(Arrays.stream(entry).filter(this::isNotBlank).toList());
+        testClasspath_.addAll(Arrays.stream(entry).filter(this::isNotBlank).toList());
         return this;
     }
 
@@ -786,8 +813,17 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testClasspath(String...) #testClasspath(String...)
      */
     public TestNgOperation testClasspath(Collection<String> entry) {
-        testClasspath.addAll(entry.stream().filter(this::isNotBlank).toList());
+        testClasspath_.addAll(entry.stream().filter(this::isNotBlank).toList());
         return this;
+    }
+
+    /**
+     * Returns the classpath entries used for running tests.
+     *
+     * @return the set of test classpath
+     */
+    public Set<String> testClasspath() {
+        return testClasspath_;
     }
 
     /**
@@ -800,7 +836,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation testJar(String jar) {
         if (isNotBlank(jar)) {
-            options.put("-testjar", jar);
+            options_.put("-testjar", jar);
         }
         return this;
     }
@@ -814,7 +850,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation testName(String name) {
         if (isNotBlank(name)) {
-            options.put("-testname", '"' + name + '"');
+            options_.put("-testname", '"' + name + '"');
         }
         return this;
     }
@@ -827,7 +863,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testNames(Collection) #testNames(Collection)
      */
     public TestNgOperation testNames(String... name) {
-        options.put("-testnames",
+        options_.put("-testnames",
                 Arrays.stream(name).filter(this::isNotBlank).map(s -> '"' + s + '"').collect(Collectors.joining(",")));
         return this;
     }
@@ -840,7 +876,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testName(String) #testName(String)
      */
     public TestNgOperation testNames(Collection<String> name) {
-        options.put("-testnames",
+        options_.put("-testnames",
                 name.stream().filter(this::isNotBlank).map(s -> '"' + s + '"').collect(Collectors.joining(",")));
         return this;
     }
@@ -853,7 +889,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation testRunFactory(String factory) {
         if (isNotBlank(factory)) {
-            options.put("-testrunfactory", factory);
+            options_.put("-testrunfactory", factory);
         }
         return this;
     }
@@ -868,7 +904,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation threadCount(int count) {
         if (count >= 0) {
-            options.put("-threadcount", String.valueOf(count));
+            options_.put("-threadcount", String.valueOf(count));
         }
         return this;
     }
@@ -881,7 +917,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation threadPoolFactoryClass(String factoryClass) {
         if (isNotBlank(factoryClass)) {
-            options.put("-threadpoolfactoryclass", factoryClass);
+            options_.put("-threadpoolfactoryclass", factoryClass);
         }
         return this;
     }
@@ -895,7 +931,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation useDefaultListeners(Boolean isDefaultListener) {
-        options.put("-usedefaultlisteners", String.valueOf(isDefaultListener));
+        options_.put("-usedefaultlisteners", String.valueOf(isDefaultListener));
         return this;
     }
 
@@ -907,7 +943,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation useGlobalThreadPool(boolean useGlobalThreadPool) {
         if (useGlobalThreadPool) {
-            options.put("-useGlobalThreadPool", String.valueOf(useGlobalThreadPool));
+            options_.put("-useGlobalThreadPool", String.valueOf(useGlobalThreadPool));
         }
         return this;
     }
@@ -921,7 +957,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation verbose(int level) {
         if (level >= 0) {
-            options.put("-verbose", String.valueOf(level));
+            options_.put("-verbose", String.valueOf(level));
         }
         return this;
     }
@@ -934,7 +970,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                     "<suite name=\"bld Default Suite\" verbose=\"2\">" +
                     "<test name=\"All Packages\">" +
                     "<packages>");
-            for (var p : packages) {
+            for (var p : packages_) {
                 bufWriter.write(String.format("<package name=\"%s\"/>", p));
             }
             bufWriter.write("</packages></test></suite>");
@@ -952,7 +988,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation xmlPathInJar(String path) {
         if (isNotBlank(path)) {
-            options.put("-xmlpathinjar", path);
+            options_.put("-xmlpathinjar", path);
         }
         return this;
     }
