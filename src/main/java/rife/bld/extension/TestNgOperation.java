@@ -41,9 +41,9 @@ import java.util.stream.Collectors;
 public class TestNgOperation extends TestOperation<TestNgOperation, List<String>> {
     private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
     /**
-     * The classpath entries used for running tests.
+     * The methods to run.
      */
-    private final Set<String> testClasspath_ = new HashSet<>();
+    private final Set<String> methods_ = new HashSet<>();
     /**
      * The run options.
      */
@@ -56,6 +56,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * The suites to run.
      */
     private final Set<String> suites_ = new HashSet<>();
+    /**
+     * The classpath entries used for running tests.
+     */
+    private final Set<String> testClasspath_ = new HashSet<>();
     private BaseProject project_;
 
     /**
@@ -202,13 +206,19 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                 }
             }
 
+            if (!methods_.isEmpty()) {
+                args.add("-methods");
+                args.add(String.join(",", methods_));
+            }
 
             if (LOGGER.isLoggable(Level.FINE) && !silent()) {
                 LOGGER.fine(String.join(" ", args));
             }
+
             if (LOGGER.isLoggable(Level.INFO) && !silent()) {
                 LOGGER.info(String.format("Report will be saved in file://%s",
                         new File(options_.get("-d")).toURI().getPath()));
+            }
         }
 
         return args;
@@ -441,7 +451,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #methods(Collection) #methods(Collection)
      */
     public TestNgOperation methods(String... method) {
-        options_.put("-methods", String.join(",", Arrays.stream(method).filter(this::isNotBlank).toList()));
+        methods_.addAll(List.of(method));
         return this;
     }
 
@@ -455,8 +465,17 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #methods(String...) #methods(String...)
      */
     public TestNgOperation methods(Collection<String> method) {
-        options_.put("-methods", String.join(",", method.stream().filter(this::isNotBlank).toList()));
+        methods_.addAll(method);
         return this;
+    }
+
+    /**
+     * Returns the methods to run.
+     *
+     * @return the set of methods
+     */
+    public Set<String> methods() {
+        return methods_;
     }
 
     /**

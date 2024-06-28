@@ -169,10 +169,9 @@ class TestNgOperationTest {
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
-                        .testClass("rife.bld.extension.TestNgExampleTest")
-                        .methods("rife.bld.extension.TestNgExampleTest.verifyHello")
+                        .methods("rife.bld.extension.TestNgExampleTest.foo")
                         .execute())
-                .as("with methods").doesNotThrowAnyException();
+                .as("with methods").isInstanceOf(ExitStatusException.class);
 
         assertThatCode(() ->
                 new TestNgOperation().fromProject(new Project())
@@ -295,10 +294,10 @@ class TestNgOperationTest {
     @Test
     void testMethods() {
         var op = new TestNgOperation().methods(FOO, BAR);
-        assertThat(op.options().get("-methods")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.methods()).containsExactly(BAR, FOO);
 
         new TestNgOperation().methods(List.of(FOO, BAR));
-        assertThat(op.options().get("-methods")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        assertThat(op.methods()).containsExactly(BAR, FOO);
     }
 
     @Test

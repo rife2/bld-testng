@@ -3,6 +3,10 @@
     <test name="simple test">
         <classes>
             <class name="rife.bld.extension.TestNgExample"/>
+                <methods>
+                    <exclude name="foo"/>
+                </methods>
+            </class>
         </classes>
     </test>
 </suite>
