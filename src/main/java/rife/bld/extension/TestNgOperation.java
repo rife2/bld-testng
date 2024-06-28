@@ -18,6 +18,7 @@ package rife.bld.extension;
 
 import rife.bld.BaseProject;
 import rife.bld.operations.TestOperation;
+import rife.bld.operations.exceptions.ExitStatusException;
 
 import java.io.File;
 import java.io.IOException;
@@ -137,6 +138,23 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         return this;
     }
 
+    @Override
+    public void execute() throws IOException, InterruptedException, ExitStatusException {
+        if (project_ == null) {
+            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
+                LOGGER.severe("A project must be specified.");
+            }
+            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
+        } else if (packages_.isEmpty() && suites_.isEmpty() && methods_.isEmpty()) {
+            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
+                LOGGER.severe("At least an XML suite, package or method is required.");
+            }
+            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
+        } else {
+            super.execute();
+        }
+    }
+
     /**
      * Part of the {@link #execute execute} operation, constructs the command list to use for building the process.
      *
@@ -144,53 +162,53 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     @Override
     protected List<String> executeConstructProcessCommandList() {
-        if (project_ == null) {
-            LOGGER.severe("A project must be specified.");
-        } else if (packages_.isEmpty() && suites_.isEmpty()) {
-            LOGGER.severe("At least one package or XML suite is required.");
-        }
-
-        if (!options_.containsKey("-d")) {
-            options_.put("-d", Path.of(project_.buildDirectory().getPath(), "test-output").toString());
-        }
-
         final List<String> args = new ArrayList<>();
-        args.add(javaTool());
-        args.addAll(javaOptions());
 
-        args.add("-cp");
-        if (testClasspath_.isEmpty()) {
-            args.add(String.format("%s:%s:%s:%s", Path.of(project_.libTestDirectory().getPath(), "*"),
-                    Path.of(project_.libCompileDirectory().getPath(), "*"), project_.buildMainDirectory(),
-                    project_.buildTestDirectory()));
-        } else {
-            args.add(String.join(":", testClasspath_));
-        }
-
-        args.add("org.testng.TestNG");
-
-        options_.forEach((k, v) -> {
-            args.add(k);
-            args.add(v);
-        });
-
-        if (!suites_.isEmpty()) {
-            args.addAll(suites_);
-        } else if (!options_.containsKey("-testclass")) {
-            try {
-                args.add(writeDefaultSuite().getPath());
-            } catch (IOException ioe) {
-                LOGGER.log(Level.SEVERE, "An IO error occurred while accessing the default testng.xml file", ioe);
+        if (project_ != null) {
+            if (!options_.containsKey("-d")) {
+                options_.put("-d", new File(project_.buildDirectory(), "test-output").getAbsolutePath());
             }
-        }
 
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine(String.join(" ", args));
-        }
+            args.add(javaTool());
+            args.addAll(javaOptions());
 
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info(String.format("Report will be saved in file://%s",
-                    new File(options_.get("-d")).toURI().getPath()));
+            args.add("-cp");
+            if (testClasspath_.isEmpty()) {
+                args.add(String.format("%s:%s:%s:%s", new File(project_.libTestDirectory(), "*"),
+                        new File(project_.libCompileDirectory(), "*"), project_.buildMainDirectory(),
+                        project_.buildTestDirectory()));
+            } else {
+                args.add(String.join(":", testClasspath_));
+            }
+
+            args.add("org.testng.TestNG");
+
+            options_.forEach((k, v) -> {
+                args.add(k);
+                args.add(v);
+            });
+
+            if (!suites_.isEmpty()) {
+                args.addAll(suites_);
+            } else if (!options_.containsKey("-testclass")) {
+                try {
+                    args.add(writeDefaultSuite().getAbsolutePath());
+                } catch (IOException ioe) {
+                    if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
+                        LOGGER.severe("An IO error occurred while accessing the default testng.xml file: "
+                                + ioe.getMessage());
+                    }
+                    throw new RuntimeException(ioe);
+                }
+            }
+
+
+            if (LOGGER.isLoggable(Level.FINE) && !silent()) {
+                LOGGER.fine(String.join(" ", args));
+            }
+            if (LOGGER.isLoggable(Level.INFO) && !silent()) {
+                LOGGER.info(String.format("Report will be saved in file://%s",
+                        new File(options_.get("-d")).toURI().getPath()));
         }
 
         return args;
@@ -233,7 +251,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
-     * Should TestNG generate results on a per suite basis by creating a sub directory for each suite and dumping
+     * Should TestNG generate results on a per-suite basis by creating a subdirectory for each suite and dumping
      * results into it.
      *
      * <p>Default is {@code false}</p>.
@@ -628,7 +646,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation shareThreadPoolForDataProviders(boolean shareThreadPoolForDataProviders) {
         if (shareThreadPoolForDataProviders) {
-            options_.put("-shareThreadPoolForDataProviders", String.valueOf(shareThreadPoolForDataProviders));
+            options_.put("-shareThreadPoolForDataProviders", "true");
         }
         return this;
     }
@@ -943,7 +961,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation useGlobalThreadPool(boolean useGlobalThreadPool) {
         if (useGlobalThreadPool) {
-            options_.put("-useGlobalThreadPool", String.valueOf(useGlobalThreadPool));
+            options_.put("-useGlobalThreadPool", "true");
         }
         return this;
     }
