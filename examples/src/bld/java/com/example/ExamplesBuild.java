@@ -54,7 +54,7 @@ public class ExamplesBuild extends BaseProject {
     }
 
     @BuildCommand(summary = "Generates Jacoco Reports")
-    public void jacoco() throws IOException {
+    public void jacoco() throws Exception {
         new JacocoReportOperation()
                 .fromProject(this)
                 .execute();

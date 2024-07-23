@@ -165,6 +165,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return the command list
      */
     @Override
+    @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
     protected List<String> executeConstructProcessCommandList() {
         final List<String> args = new ArrayList<>();
 
