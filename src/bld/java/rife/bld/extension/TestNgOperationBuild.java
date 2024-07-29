@@ -44,10 +44,8 @@ public class TestNgOperationBuild extends Project {
         autoDownloadPurge = true;
         repositories = List.of(MAVEN_LOCAL, MAVEN_CENTRAL, RIFE2_RELEASES, RIFE2_SNAPSHOTS);
 
-        var rife2 = version(1, 8, 0);
         scope(compile)
-                .include(dependency("com.uwyn.rife2", "rife2", rife2))
-                .include(dependency("com.uwyn.rife2", "bld", version(2, 0, 0, "SNAPSHOT")));
+                .include(dependency("com.uwyn.rife2", "bld", version(2, 0, 1)));
 
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 10, 2)))
