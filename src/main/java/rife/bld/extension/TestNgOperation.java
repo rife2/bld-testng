@@ -119,6 +119,30 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
+     * The directory where the reports will be generated
+     *
+     * <p>Default is {@code build/test-output})</p>
+     *
+     * @param directoryPath the directory path
+     * @return this operation instance
+     */
+    public TestNgOperation directory(File directoryPath) {
+        return directory(directoryPath.getAbsolutePath());
+    }
+
+    /**
+     * The directory where the reports will be generated
+     *
+     * <p>Default is {@code build/test-output})</p>
+     *
+     * @param directoryPath the directory path
+     * @return this operation instance
+     */
+    public TestNgOperation directory(Path directoryPath) {
+        return directory(directoryPath.toFile());
+    }
+
+    /**
      * The list of groups you want to be excluded from this run.
      *
      * @param group one or more groups
@@ -678,10 +702,49 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @param directory one or more directories
      * @return this operation instance
-     * @see #sourceDir(String...) #sourceDir(String...)
+     * @see #sourceDir(Collection)
      */
     public TestNgOperation sourceDir(String... directory) {
-        options_.put("-sourcedir", String.join(";", Arrays.stream(directory).filter(this::isNotBlank).toList()));
+        return sourceDir(List.of(directory));
+    }
+
+    /**
+     * The directories where your javadoc annotated test sources are. This option is only necessary
+     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
+     *
+     * @param directory one or more directories
+     * @return this operation instance
+     * @see #sourceDirFiles(Collection)
+     */
+    public TestNgOperation sourceDir(File... directory) {
+        return sourceDirFiles(List.of(directory));
+    }
+
+    /**
+     * The directories where your javadoc annotated test sources are. This option is only necessary
+     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
+     *
+     * @param directory one or more directories
+     * @return this operation instance
+     * @see #sourceDirPaths(Collection)
+     */
+    public TestNgOperation sourceDir(Path... directory) {
+        return sourceDirPaths(List.of(directory));
+    }
+
+    /**
+     * The directories where your javadoc annotated test sources are. This option is only necessary
+     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
+     *
+     * @param directory the list of directories
+     * @return this operation instance
+     * @see #sourceDir(String...)
+     */
+    public TestNgOperation sourceDir(Collection<String> directory) {
+        options_.put("-sourcedir", String.join(";", directory.stream().filter(this::isNotBlank).toList()));
         return this;
     }
 
@@ -692,11 +755,23 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @param directory the list of directories
      * @return this operation instance
-     * @see #sourceDir(String...) #sourceDir(String...)
+     * @see #sourceDir(File...)
      */
-    public TestNgOperation sourceDir(Collection<String> directory) {
-        options_.put("-sourcedir", String.join(";", directory.stream().filter(this::isNotBlank).toList()));
-        return this;
+    public TestNgOperation sourceDirFiles(Collection<File> directory) {
+        return sourceDir(directory.stream().map(File::getAbsolutePath).toList());
+    }
+
+    /**
+     * The directories where your javadoc annotated test sources are. This option is only necessary
+     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
+     *
+     * @param directory the list of directories
+     * @return this operation instance
+     * @see #sourceDir(Path...)
+     */
+    public TestNgOperation sourceDirPaths(Collection<Path> directory) {
+        return sourceDirFiles(directory.stream().map(Path::toFile).toList());
     }
 
     /**
@@ -1029,6 +1104,30 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
             options_.put("-xmlpathinjar", path);
         }
         return this;
+    }
+
+    /**
+     * This attribute should contain the path to a valid XML file inside the test jar
+     * (e.g. {@code "resources/testng.xml"}). The default is {@code testng.xml}, which means a file called
+     * {@code testng.xml} at the root of the jar file. This option will be ignored unless a test jar is specified.
+     *
+     * @param path the path
+     * @return this operation instance
+     */
+    public TestNgOperation xmlPathInJar(File path) {
+        return xmlPathInJar(path.getAbsolutePath());
+    }
+
+    /**
+     * This attribute should contain the path to a valid XML file inside the test jar
+     * (e.g. {@code "resources/testng.xml"}). The default is {@code testng.xml}, which means a file called
+     * {@code testng.xml} at the root of the jar file. This option will be ignored unless a test jar is specified.
+     *
+     * @param path the path
+     * @return this operation instance
+     */
+    public TestNgOperation xmlPathInJar(Path path) {
+        return xmlPathInJar(path.toFile());
     }
 
     /**

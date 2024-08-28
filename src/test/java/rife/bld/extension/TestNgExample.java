@@ -22,7 +22,7 @@ package rife.bld.extension;
  * @author <a href="https://erik.thauvin.net/">Erik C. Thauvin</a>
  * @since 1.0
  */
-@SuppressWarnings("PMD.TestClassWithoutTestCases")
+@SuppressWarnings({"PMD.TestClassWithoutTestCases", "unused"})
 class TestNgExample {
     public String getMessage() {
         return "Hello World!";

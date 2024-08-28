@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
  * @author <a href="https://erik.thauvin.net/">Erik C. Thauvin</a>
  * @since 1.0
  */
+@SuppressWarnings("unused")
 class TestNgExampleTest {
     private final TestNgExample example = new TestNgExample();
 

@@ -140,8 +140,16 @@ class TestNgOperationTest {
 
     @Test
     void testDirectory() {
+        var foo = new File("FOO");
+
         var op = new TestNgOperation().directory(FOO);
-        assertThat(op.options().get("-d")).isEqualTo(FOO);
+        assertThat(op.options().get("-d")).as("as string").isEqualTo(FOO);
+
+        op = new TestNgOperation().directory(foo);
+        assertThat(op.options().get("-d")).as("as file").isEqualTo(foo.getAbsolutePath());
+
+        op = new TestNgOperation().directory(foo.toPath());
+        assertThat(op.options().get("-d")).as("as path").isEqualTo(foo.getAbsolutePath());
     }
 
     @Test
@@ -401,11 +409,28 @@ class TestNgOperationTest {
 
     @Test
     void testSourceDir() {
+        var foo = new File(FOO);
+        var bar = new File(BAR);
+
+        var foobar = String.format("%s;%s", FOO, BAR);
         var op = new TestNgOperation().sourceDir(FOO, BAR);
-        assertThat(op.options().get("-sourcedir")).isEqualTo(String.format("%s;%s", FOO, BAR));
+        assertThat(op.options().get("-sourcedir")).as("String...").isEqualTo(foobar);
 
         op = new TestNgOperation().sourceDir(List.of(FOO, BAR));
-        assertThat(op.options().get("-sourcedir")).as("as list").isEqualTo(String.format("%s;%s", FOO, BAR));
+        assertThat(op.options().get("-sourcedir")).as("List(String...)").isEqualTo(foobar);
+
+        foobar = String.format("%s;%s", foo.getAbsolutePath(), bar.getAbsolutePath());
+        op = new TestNgOperation().sourceDir(foo, bar);
+        assertThat(op.options().get("-sourcedir")).as("File...").isEqualTo(foobar);
+
+        op = new TestNgOperation().sourceDirFiles(List.of(foo, bar));
+        assertThat(op.options().get("-sourcedir")).as("List(String...)").isEqualTo(foobar);
+
+        op = new TestNgOperation().sourceDir(foo.toPath(), bar.toPath());
+        assertThat(op.options().get("-sourcedir")).as("Path...").isEqualTo(foobar);
+
+        op = new TestNgOperation().sourceDirPaths(List.of(foo.toPath(), bar.toPath()));
+        assertThat(op.options().get("-sourcedir")).as("List(Path...)").isEqualTo(foobar);
     }
 
     @Test
@@ -479,7 +504,14 @@ class TestNgOperationTest {
 
     @Test
     void testXmlPathInJar() {
+        var foo = new File(FOO);
         var op = new TestNgOperation().xmlPathInJar(FOO);
-        assertThat(op.options().get("-xmlpathinjar")).isEqualTo(FOO);
+        assertThat(op.options().get("-xmlpathinjar")).as("as string").isEqualTo(FOO);
+
+        op = new TestNgOperation().xmlPathInJar(foo);
+        assertThat(op.options().get("-xmlpathinjar")).as("as file").isEqualTo(foo.getAbsolutePath());
+
+        op = new TestNgOperation().xmlPathInJar(foo.toPath());
+        assertThat(op.options().get("-xmlpathinjar")).as("as path").isEqualTo(foo.getAbsolutePath());
     }
 }
