@@ -42,7 +42,7 @@ public class TestNgOperationBuild extends Project {
         repositories = List.of(MAVEN_LOCAL, MAVEN_CENTRAL, RIFE2_RELEASES, RIFE2_SNAPSHOTS);
 
         scope(compile)
-                .include(dependency("com.uwyn.rife2", "bld", version(2, 0, 1)));
+                .include(dependency("com.uwyn.rife2", "bld", version(2, 1, 0)));
 
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 10, 2)))
