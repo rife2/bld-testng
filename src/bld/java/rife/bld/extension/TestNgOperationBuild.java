@@ -33,7 +33,7 @@ public class TestNgOperationBuild extends Project {
     public TestNgOperationBuild() {
         pkg = "rife.bld.extension";
         name = "bld-testng";
-        version = version(1, 0, 0, "SNAPSHOT");
+        version = version(1, 0, 0);
 
         javaRelease = 17;
 
