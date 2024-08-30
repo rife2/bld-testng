@@ -150,8 +150,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #excludeGroups(Collection) #excludeGroups(Collection)
      */
     public TestNgOperation excludeGroups(String... group) {
-        options_.put("-excludegroups", String.join(",", Arrays.stream(group).filter(this::isNotBlank).toList()));
-        return this;
+        return excludeGroups(List.of(group));
     }
 
     /**
@@ -309,8 +308,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #groups(Collection) #groups(Collection)
      */
     public TestNgOperation groups(String... group) {
-        options_.put("-groups", String.join(",", Arrays.stream(group).filter(this::isNotBlank).toList()));
-        return this;
+        return groups(List.of(group));
     }
 
     /**
@@ -383,8 +381,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #listener(Collection) #listener(Collection)
      */
     public TestNgOperation listener(String... listener) {
-        options_.put("-listener", String.join(",", Arrays.stream(listener).filter(this::isNotBlank).toList()));
-        return this;
+        return listener(List.of(listener));
     }
 
     /**
@@ -447,9 +444,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #methodSelectors(Collection) #methodSelectors(Collection)
      */
     public TestNgOperation methodSelectors(String... selector) {
-        options_.put("-methodselectors",
-                String.join(",", Arrays.stream(selector).filter(this::isNotBlank).toList()));
-        return this;
+        return methodSelectors(List.of(selector));
     }
 
     /**
@@ -476,8 +471,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #methods(Collection) #methods(Collection)
      */
     public TestNgOperation methods(String... method) {
-        methods_.addAll(List.of(method));
-        return this;
+        return methods(List.of(method));
     }
 
     /**
@@ -517,31 +511,24 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
-     * Fully qualified class name that implements {@code org.testng.ITestObjectFactory} which can be used to create
+     * The list of {@code .class} files or class names implementing {@code ITestRunnerFactory}.
+     * <p>
+     * A fully qualified class name that implements {@code org.testng.ITestObjectFactory} which can be used to create
      * test class and listener instances.
      *
-     * @param objectFactory the object factory
-     * @return this operation instance
-     */
-    public TestNgOperation objectFactory(String objectFactory) {
-        options_.put("-objectfactory", objectFactory);
-        return this;
-    }
-
-    /**
-     * The list of {@code .class} files or class names implementing {@code ITestRunnerFactory}.
-     *
-     * @param factory one or more factories
+     * @param factory one or more factory
      * @return this operation instance
      * @see #objectFactory(Collection) #objectFactory(Collection)
      */
     public TestNgOperation objectFactory(String... factory) {
-        options_.put("-objectfactory", String.join(",", Arrays.stream(factory).filter(this::isNotBlank).toList()));
-        return this;
+        return objectFactory(List.of(factory));
     }
 
     /**
      * The list of {@code .class} files or class names implementing {@code ITestRunnerFactory}.
+     * <p>
+     * A fully qualified class name that implements {@code org.testng.ITestObjectFactory} which can be used to create
+     * test class and listener instances.
      *
      * @param factory the list of factories
      * @return this operation instance
@@ -570,9 +557,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #overrideIncludedMethods(Collection) #overrideIncludedMethods(Collection)
      */
     public TestNgOperation overrideIncludedMethods(String... method) {
-        options_.put("-overrideincludedmethods",
-                String.join(",", Arrays.stream(method).filter(this::isNotBlank).toList()));
-        return this;
+        return overrideIncludedMethods(List.of(method));
     }
 
     /**
@@ -600,8 +585,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #packages(Collection) #packages(Collection)
      */
     public TestNgOperation packages(String... name) {
-        packages_.addAll(Arrays.stream(name).filter(this::isNotBlank).toList());
-        return this;
+        return packages(List.of(name));
     }
 
     /**
@@ -783,9 +767,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #spiListenersToSkip(Collection) #spiListenersToSkip(Collection)
      */
     public TestNgOperation spiListenersToSkip(String... listenerToSkip) {
-        options_.put("-spilistenerstoskip",
-                String.join(",", Arrays.stream(listenerToSkip).filter(this::isNotBlank).toList()));
-        return this;
+        return spiListenersToSkip(List.of(listenerToSkip));
     }
 
     /**
@@ -840,8 +822,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #suites(Collection) #suites(Collection)
      */
     public TestNgOperation suites(String... suite) {
-        suites_.addAll(Arrays.stream(suite).filter(this::isNotBlank).toList());
-        return this;
+        return suites(List.of(suite));
     }
 
     /**
@@ -888,8 +869,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testClass(Collection) #testClass(Collection)
      */
     public TestNgOperation testClass(String... aClass) {
-        options_.put("-testclass", String.join(",", Arrays.stream(aClass).filter(this::isNotBlank).toList()));
-        return this;
+        return testClass(List.of(aClass));
     }
 
     /**
@@ -914,8 +894,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testClasspath(String...) #testClasspath(String...)
      */
     public TestNgOperation testClasspath(String... entry) {
-        testClasspath_.addAll(Arrays.stream(entry).filter(this::isNotBlank).toList());
-        return this;
+        return testClasspath(List.of(entry));
     }
 
     /**
@@ -976,9 +955,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #testNames(Collection) #testNames(Collection)
      */
     public TestNgOperation testNames(String... name) {
-        options_.put("-testnames",
-                Arrays.stream(name).filter(this::isNotBlank).map(s -> '"' + s + '"').collect(Collectors.joining(",")));
-        return this;
+        return testNames(List.of(name));
     }
 
     /**
