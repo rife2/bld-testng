@@ -36,7 +36,7 @@ public class ExamplesBuild extends BaseProject {
 
         repositories = List.of(MAVEN_CENTRAL);
 
-        scope(test).include(dependency("org.testng", "testng", version(7, 10, 2)));
+        scope(test).include(dependency("org.testng", "testng", version(7, 11, 0)));
     }
 
     public static void main(String[] args) {
