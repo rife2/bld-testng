@@ -6,7 +6,6 @@ import rife.bld.extension.JacocoReportOperation;
 import rife.bld.extension.TestNgOperation;
 import rife.bld.operations.TestOperation;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -17,7 +16,7 @@ import static rife.bld.dependencies.Scope.test;
 
 /**
  * Example build.
- * 
+ *
  * <pre>{@code
  * ./bld compile test
  * ./bld compile jacoco

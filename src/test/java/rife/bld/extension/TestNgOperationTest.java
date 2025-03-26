@@ -18,6 +18,8 @@ package rife.bld.extension;
 
 import org.assertj.core.api.AutoCloseableSoftAssertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import rife.bld.Project;
 import rife.bld.blueprints.BaseProjectBlueprint;
 import rife.bld.operations.exceptions.ExitStatusException;
@@ -51,6 +53,7 @@ class TestNgOperationTest {
     }
 
     @Test
+    @EnabledOnOs(OS.LINUX)
     void testCheckAllParameters() throws IOException {
         var args = Files.readAllLines(Paths.get("src", "test", "resources", "testng-args.txt"));
 

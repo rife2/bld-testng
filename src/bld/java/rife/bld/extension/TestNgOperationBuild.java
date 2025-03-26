@@ -33,7 +33,7 @@ public class TestNgOperationBuild extends Project {
     public TestNgOperationBuild() {
         pkg = "rife.bld.extension";
         name = "bld-testng";
-        version = version(1, 0, 2);
+        version = version(1, 0, 3, "SNAPSHOT");
 
         javaRelease = 17;
 
@@ -100,10 +100,13 @@ public class TestNgOperationBuild extends Project {
 
     @Override
     public void test() throws Exception {
-        new ExecOperation()
-                .fromProject(this)
-                .command("scripts/cliargs.sh")
-                .execute();
+        var os = System.getProperty("os.name");
+        if (os != null && os.toLowerCase().contains("linux")) {
+            new ExecOperation()
+                    .fromProject(this)
+                    .command("scripts/cliargs.sh")
+                    .execute();
+        }
         super.test();
     }
 }
