@@ -75,6 +75,19 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         return this;
     }
 
+    private String buildClassPath(String... path) {
+        var classpath = new StringBuilder();
+        for (var p : path) {
+            if (!p.isBlank()) {
+                if (!classpath.isEmpty()) {
+                    classpath.append(File.pathSeparator);
+                }
+                classpath.append(p);
+            }
+        }
+        return classpath.toString();
+    }
+
     /**
      * This sets the default maximum number of threads to use for data providers when running tests in parallel.
      * It will only take effect if the parallel mode has been selected (for example,with the
@@ -202,11 +215,13 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
             args.add("-cp");
             if (testClasspath_.isEmpty()) {
-                args.add(String.format("%s:%s:%s:%s", new File(project_.libTestDirectory(), "*"),
-                        new File(project_.libCompileDirectory(), "*"), project_.buildMainDirectory(),
-                        project_.buildTestDirectory()));
+                args.add(buildClassPath(joinClasspathJar(project_.testClasspathJars()),
+                        joinClasspathJar(project_.compileClasspathJars()),
+                        joinClasspathJar(project_.providedClasspathJars()),
+                        project_.buildMainDirectory().getAbsolutePath(),
+                        project_.buildTestDirectory().getAbsolutePath()));
             } else {
-                args.add(String.join(":", testClasspath_));
+                args.add(String.join(File.pathSeparator, testClasspath_));
             }
 
             args.add("org.testng.TestNG");
@@ -224,7 +239,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                 } catch (IOException ioe) {
                     if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
                         LOGGER.severe("An IO error occurred while accessing the default testng.xml file: "
-                                + ioe.getMessage());
+                                      + ioe.getMessage());
                     }
                     throw new RuntimeException(ioe);
                 }
@@ -370,6 +385,14 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     public TestNgOperation jUnit(Boolean isJunit) {
         options_.put("-junit", String.valueOf(isJunit));
         return this;
+    }
+
+    private String joinClasspathJar(List<File> jars) {
+        if (!jars.isEmpty()) {
+            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList());
+        } else {
+            return "";
+        }
     }
 
     /**
@@ -1056,10 +1079,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         var temp = tempFile();
         try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
             bufWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                    "<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">" +
-                    "<suite name=\"bld Default Suite\" verbose=\"2\">" +
-                    "<test name=\"All Packages\">" +
-                    "<packages>");
+                            "<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">" +
+                            "<suite name=\"bld Default Suite\" verbose=\"2\">" +
+                            "<test name=\"All Packages\">" +
+                            "<packages>");
             for (var p : packages_) {
                 bufWriter.write(String.format("<package name=\"%s\"/>", p));
             }
