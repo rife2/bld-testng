@@ -20,13 +20,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- * Implements the TestNgExampleTest class.
+ * Implements the TestNgExampleTests class.
  *
  * @author <a href="https://erik.thauvin.net/">Erik C. Thauvin</a>
  * @since 1.0
  */
 @SuppressWarnings("unused")
-class TestNgExampleTest {
+class TestNgExampleTests {
     private final TestNgExample example = new TestNgExample();
 
     @Test
