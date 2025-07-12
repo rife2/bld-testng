@@ -295,7 +295,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation failurePolicy(FailurePolicy policy) {
-        options_.put("-configfailurepolicy", policy.name().toLowerCase(Locale.getDefault()));
+        options_.put("-configfailurepolicy", policy.name().toLowerCase());
         return this;
     }
 
@@ -646,7 +646,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see Parallel
      */
     public TestNgOperation parallel(Parallel mechanism) {
-        options_.put("-parallel", mechanism.name().toLowerCase(Locale.getDefault()));
+        options_.put("-parallel", mechanism.name().toLowerCase());
         return this;
     }
 
