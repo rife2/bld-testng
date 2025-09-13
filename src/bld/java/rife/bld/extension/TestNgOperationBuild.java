@@ -50,9 +50,9 @@ public class TestNgOperationBuild extends Project {
 
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 11, 0)))
-                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 13, 3)))
-                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 13, 3)))
                 .include(dependency("org.assertj", "assertj-core", version(3, 27, 3)));
+                .include(dependency("org.junit.jupiter", "junit-jupiter", version(5, 13, 4)))
+                .include(dependency("org.junit.platform", "junit-platform-console-standalone", version(1, 13, 4)))
 
         javadocOperation()
                 .javadocOptions()
