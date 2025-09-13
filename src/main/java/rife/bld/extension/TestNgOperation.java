@@ -239,7 +239,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                 } catch (IOException ioe) {
                     if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
                         LOGGER.severe("An IO error occurred while accessing the default testng.xml file: "
-                                      + ioe.getMessage());
+                                + ioe.getMessage());
                     }
                     throw new RuntimeException(ioe);
                 }
@@ -1079,10 +1079,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         var temp = tempFile();
         try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
             bufWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                            "<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">" +
-                            "<suite name=\"bld Default Suite\" verbose=\"2\">" +
-                            "<test name=\"All Packages\">" +
-                            "<packages>");
+                    "<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">" +
+                    "<suite name=\"bld Default Suite\" verbose=\"2\">" +
+                    "<test name=\"All Packages\">" +
+                    "<packages>");
             for (var p : packages_) {
                 bufWriter.write(String.format("<package name=\"%s\"/>", p));
             }

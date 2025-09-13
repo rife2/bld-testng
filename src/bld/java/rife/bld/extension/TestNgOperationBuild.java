@@ -42,7 +42,7 @@ public class TestNgOperationBuild extends Project {
 
         downloadSources = true;
         autoDownloadPurge = true;
-        
+
         repositories = List.of(MAVEN_LOCAL, MAVEN_CENTRAL, RIFE2_RELEASES, RIFE2_SNAPSHOTS);
 
         scope(compile)
@@ -67,7 +67,7 @@ public class TestNgOperationBuild extends Project {
                 .info()
                 .groupId("com.uwyn.rife2")
                 .artifactId("bld-testng")
-                .description("bld Extension to execute tests with TestNG")
+                .description("TestNG Extension for bld")
                 .url("https://github.com/rife2/bld-testng")
                 .developer(new PublishDeveloper()
                         .id("ethauvin")
@@ -101,6 +101,14 @@ public class TestNgOperationBuild extends Project {
                 .execute();
     }
 
+    @BuildCommand(summary = "Runs the JUnit reporter")
+    public void reporter() throws Exception {
+        new JUnitReporterOperation()
+                .fromProject(this)
+                .failOnSummary(true)
+                .execute();
+    }
+
     @Override
     public void test() throws Exception {
         var os = System.getProperty("os.name");
@@ -112,8 +120,10 @@ public class TestNgOperationBuild extends Project {
         }
 
         var testResultsDir = "build/test-results/test/";
+        var reportsDir = "build/reports/tests/test/";
         var op = testOperation().fromProject(this);
         op.testToolOptions().reportsDir(new File(testResultsDir));
+
 
         Exception ex = null;
         try {
@@ -122,16 +132,19 @@ public class TestNgOperationBuild extends Project {
             ex = e;
         }
 
-        var xunitViewer = new File("/usr/bin/xunit-viewer");
-        if (xunitViewer.exists() && xunitViewer.canExecute()) {
-            var reportsDir = "build/reports/tests/test/";
 
-            Files.createDirectories(Path.of(reportsDir));
+        var npmPackagesEnv = System.getenv("NPM_PACKAGES");
+        if (npmPackagesEnv != null && !npmPackagesEnv.isEmpty()) {
+            var xunitViewer = Path.of(npmPackagesEnv, "bin", "xunit-viewer").toFile();
+            if (xunitViewer.exists() && xunitViewer.canExecute()) {
 
-            new ExecOperation()
-                    .fromProject(this)
-                    .command(xunitViewer.getPath(), "-r", testResultsDir, "-o", reportsDir + "index.html")
-                    .execute();
+                Files.createDirectories(Path.of(reportsDir));
+
+                new ExecOperation()
+                        .fromProject(this)
+                        .command(xunitViewer.getPath(), "-r", testResultsDir, "-o", reportsDir + "index.html")
+                        .execute();
+            }
         }
 
         if (ex != null) {
