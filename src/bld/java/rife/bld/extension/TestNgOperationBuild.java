@@ -23,13 +23,10 @@ import rife.bld.publish.PublishLicense;
 import rife.bld.publish.PublishScm;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import static rife.bld.dependencies.Repository.*;
-import static rife.bld.dependencies.Scope.compile;
-import static rife.bld.dependencies.Scope.test;
+import static rife.bld.dependencies.Scope.*;
 import static rife.bld.operations.JavadocOptions.DocLinkOption.NO_MISSING;
 
 public class TestNgOperationBuild extends Project {
@@ -48,7 +45,9 @@ public class TestNgOperationBuild extends Project {
         var junit = version(6, 0, 1);
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld", version(2, 3, 0)));
-
+        scope(provided)
+                .include(dependency("com.github.spotbugs", "spotbugs-annotations",
+                        version(4, 9, 8)));
         scope(test)
                 .include(dependency("org.testng", "testng", version(7, 11, 0)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", junit))
@@ -89,6 +88,22 @@ public class TestNgOperationBuild extends Project {
                 .signPassphrase(property("sign.passphrase"));
     }
 
+    @Override
+    public void test() throws Exception {
+        var os = System.getProperty("os.name");
+        if (os != null && os.toLowerCase().contains("linux")) {
+            new ExecOperation()
+                    .fromProject(this)
+                    .command("scripts/cliargs.sh")
+                    .execute();
+        }
+
+        var testResultsDir = "build/test-results/test/";
+        var op = testOperation().fromProject(this);
+        op.testToolOptions().reportsDir(new File(testResultsDir));
+        op.execute();
+    }
+
     public static void main(String[] args) {
         new TestNgOperationBuild().start(args);
     }
@@ -110,19 +125,11 @@ public class TestNgOperationBuild extends Project {
                 .execute();
     }
 
-    @Override
-    public void test() throws Exception {
-        var os = System.getProperty("os.name");
-        if (os != null && os.toLowerCase().contains("linux")) {
-            new ExecOperation()
-                    .fromProject(this)
-                    .command("scripts/cliargs.sh")
-                    .execute();
-        }
-
-        var testResultsDir = "build/test-results/test/";
-        var op = testOperation().fromProject(this);
-        op.testToolOptions().reportsDir(new File(testResultsDir));
-        op.execute();
+    @BuildCommand(summary = "Runs SpotBugs on this project")
+    public void spotbugs() throws Exception {
+        new SpotBugsOperation()
+                .fromProject(this)
+                .home("/opt/spotbugs")
+                .execute();
     }
 }

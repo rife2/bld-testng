@@ -16,6 +16,7 @@
 
 package rife.bld.extension;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import rife.bld.BaseProject;
 import rife.bld.operations.TestOperation;
 import rife.bld.operations.exceptions.ExitStatusException;
@@ -62,6 +63,106 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     private final Set<String> testClasspath_ = new HashSet<>();
     private BaseProject project_;
 
+    @Override
+    public void execute() throws IOException, InterruptedException, ExitStatusException {
+        if (project_ == null) {
+            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
+                LOGGER.severe("A project must be specified.");
+            }
+            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
+        } else if (packages_.isEmpty() && suites_.isEmpty() && methods_.isEmpty()) {
+            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
+                LOGGER.severe("At least an XML suite, package or method is required.");
+            }
+            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
+        } else {
+            super.execute();
+        }
+    }
+
+    /**
+     * Part of the {@link #execute execute} operation, constructs the command list to use for building the process.
+     *
+     * @return the command list
+     */
+    @Override
+    @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
+    @SuppressFBWarnings({"EXS_EXCEPTION_SOFTENING_NO_CHECKED", "PATH_TRAVERSAL_IN"})
+    protected List<String> executeConstructProcessCommandList() {
+        final List<String> args = new ArrayList<>();
+
+        if (project_ != null) {
+            if (!options_.containsKey("-d")) {
+                options_.put("-d", new File(project_.buildDirectory(), "test-output").getAbsolutePath());
+            }
+
+            args.add(javaTool());
+            args.addAll(javaOptions());
+
+            args.add("-cp");
+            if (testClasspath_.isEmpty()) {
+                args.add(buildClassPath(joinClasspathJar(project_.testClasspathJars()),
+                        joinClasspathJar(project_.compileClasspathJars()),
+                        joinClasspathJar(project_.providedClasspathJars()),
+                        project_.buildMainDirectory().getAbsolutePath(),
+                        project_.buildTestDirectory().getAbsolutePath()));
+            } else {
+                args.add(String.join(File.pathSeparator, testClasspath_));
+            }
+
+            args.add("org.testng.TestNG");
+
+            options_.forEach((k, v) -> {
+                args.add(k);
+                args.add(v);
+            });
+
+            if (!suites_.isEmpty()) {
+                args.addAll(suites_);
+            } else if (!options_.containsKey("-testclass")) {
+                try {
+                    args.add(writeDefaultSuite().getAbsolutePath());
+                } catch (IOException ioe) {
+                    if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
+                        LOGGER.severe("An IO error occurred while accessing the default testng.xml file: "
+                                + ioe.getMessage());
+                    }
+                    throw new RuntimeException(ioe);
+                }
+            }
+
+            if (!methods_.isEmpty()) {
+                args.add("-methods");
+                args.add(String.join(",", methods_));
+            }
+
+            if (LOGGER.isLoggable(Level.FINE) && !silent()) {
+                LOGGER.fine(String.join(" ", args));
+            }
+
+            if (LOGGER.isLoggable(Level.INFO) && !silent()) {
+                LOGGER.info(String.format("Report will be saved in file://%s",
+                        new File(options_.get("-d")).toURI().getPath()));
+            }
+        }
+
+        return args;
+    }
+
+    /**
+     * Configures the {@link BaseProject}.
+     *
+     * @param project the project
+     * @return this operation instance
+     */
+    @Override
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public TestNgOperation fromProject(BaseProject project) {
+        project_ = project;
+        directory(Path.of(project.buildDirectory().getPath(), "test-output").toString());
+        return this;
+    }
+
     /**
      * Should Method Invocation Listeners be run even for skipped methods.
      *
@@ -75,22 +176,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         return this;
     }
 
-    private String buildClassPath(String... path) {
-        var classpath = new StringBuilder();
-        for (var p : path) {
-            if (!p.isBlank()) {
-                if (!classpath.isEmpty()) {
-                    classpath.append(File.pathSeparator);
-                }
-                classpath.append(p);
-            }
-        }
-        return classpath.toString();
-    }
-
     /**
      * This sets the default maximum number of threads to use for data providers when running tests in parallel.
-     * It will only take effect if the parallel mode has been selected (for example,with the
+     * It will only take effect if the parallel mode has been selected (for example, with the
      * {@link #parallel(Parallel) parallel} option). This can be overridden in the suite definition.
      *
      * @param count the count
@@ -175,104 +263,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation excludeGroups(Collection<String> group) {
         options_.put("-excludegroups", String.join(",", group.stream().filter(this::isNotBlank).toList()));
-        return this;
-    }
-
-    @Override
-    public void execute() throws IOException, InterruptedException, ExitStatusException {
-        if (project_ == null) {
-            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
-                LOGGER.severe("A project must be specified.");
-            }
-            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
-        } else if (packages_.isEmpty() && suites_.isEmpty() && methods_.isEmpty()) {
-            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
-                LOGGER.severe("At least an XML suite, package or method is required.");
-            }
-            throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
-        } else {
-            super.execute();
-        }
-    }
-
-    /**
-     * Part of the {@link #execute execute} operation, constructs the command list to use for building the process.
-     *
-     * @return the command list
-     */
-    @Override
-    @SuppressWarnings("PMD.AvoidThrowingRawExceptionTypes")
-    protected List<String> executeConstructProcessCommandList() {
-        final List<String> args = new ArrayList<>();
-
-        if (project_ != null) {
-            if (!options_.containsKey("-d")) {
-                options_.put("-d", new File(project_.buildDirectory(), "test-output").getAbsolutePath());
-            }
-
-            args.add(javaTool());
-            args.addAll(javaOptions());
-
-            args.add("-cp");
-            if (testClasspath_.isEmpty()) {
-                args.add(buildClassPath(joinClasspathJar(project_.testClasspathJars()),
-                        joinClasspathJar(project_.compileClasspathJars()),
-                        joinClasspathJar(project_.providedClasspathJars()),
-                        project_.buildMainDirectory().getAbsolutePath(),
-                        project_.buildTestDirectory().getAbsolutePath()));
-            } else {
-                args.add(String.join(File.pathSeparator, testClasspath_));
-            }
-
-            args.add("org.testng.TestNG");
-
-            options_.forEach((k, v) -> {
-                args.add(k);
-                args.add(v);
-            });
-
-            if (!suites_.isEmpty()) {
-                args.addAll(suites_);
-            } else if (!options_.containsKey("-testclass")) {
-                try {
-                    args.add(writeDefaultSuite().getAbsolutePath());
-                } catch (IOException ioe) {
-                    if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
-                        LOGGER.severe("An IO error occurred while accessing the default testng.xml file: "
-                                + ioe.getMessage());
-                    }
-                    throw new RuntimeException(ioe);
-                }
-            }
-
-            if (!methods_.isEmpty()) {
-                args.add("-methods");
-                args.add(String.join(",", methods_));
-            }
-
-            if (LOGGER.isLoggable(Level.FINE) && !silent()) {
-                LOGGER.fine(String.join(" ", args));
-            }
-
-            if (LOGGER.isLoggable(Level.INFO) && !silent()) {
-                LOGGER.info(String.format("Report will be saved in file://%s",
-                        new File(options_.get("-d")).toURI().getPath()));
-            }
-        }
-
-        return args;
-    }
-
-    /**
-     * Configures the {@link BaseProject}.
-     *
-     * @param project the project
-     * @return this operation instance
-     */
-    @Override
-    public TestNgOperation fromProject(BaseProject project) {
-        project_ = project;
-        directory(Path.of(project.buildDirectory().getPath(), "test-output").toString());
         return this;
     }
 
@@ -367,13 +357,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         return this;
     }
 
-    /*
-     * Determines if a string is not blank.
-     */
-    private boolean isNotBlank(String s) {
-        return s != null && !s.isBlank();
-    }
-
     /**
      * Enables or disables the JUnit mode.
      *
@@ -385,14 +368,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     public TestNgOperation jUnit(Boolean isJunit) {
         options_.put("-junit", String.valueOf(isJunit));
         return this;
-    }
-
-    private String joinClasspathJar(List<File> jars) {
-        if (!jars.isEmpty()) {
-            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList());
-        } else {
-            return "";
-        }
     }
 
     /**
@@ -516,6 +491,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of methods
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> methods() {
         return methods_;
     }
@@ -567,6 +543,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the map of run options
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Map<String, String> options() {
         return options_;
     }
@@ -632,6 +609,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of packages
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> packages() {
         return packages_;
     }
@@ -867,19 +845,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of suites
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> suites() {
         return suites_;
-    }
-
-    /**
-     * Create a test file and delete it on exit.
-     *
-     * @return this operation instance
-     */
-    private File tempFile() throws IOException {
-        var temp = File.createTempFile("testng", ".xml");
-        temp.deleteOnExit();
-        return temp;
     }
 
     /**
@@ -937,6 +905,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of test classpath
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> testClasspath() {
         return testClasspath_;
     }
@@ -1075,22 +1044,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         return this;
     }
 
-    private File writeDefaultSuite() throws IOException {
-        var temp = tempFile();
-        try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
-            bufWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                    "<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">" +
-                    "<suite name=\"bld Default Suite\" verbose=\"2\">" +
-                    "<test name=\"All Packages\">" +
-                    "<packages>");
-            for (var p : packages_) {
-                bufWriter.write(String.format("<package name=\"%s\"/>", p));
-            }
-            bufWriter.write("</packages></test></suite>");
-        }
-        return temp;
-    }
-
     /**
      * This attribute should contain the path to a valid XML file inside the test jar
      * (e.g. {@code "resources/testng.xml"}). The default is {@code testng.xml}, which means a file called
@@ -1128,6 +1081,62 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation xmlPathInJar(Path path) {
         return xmlPathInJar(path.toFile());
+    }
+
+    private String buildClassPath(String... path) {
+        var classpath = new StringBuilder();
+        for (var p : path) {
+            if (!p.isBlank()) {
+                if (!classpath.isEmpty()) {
+                    classpath.append(File.pathSeparator);
+                }
+                classpath.append(p);
+            }
+        }
+        return classpath.toString();
+    }
+
+    /*
+     * Determines if a string is not blank.
+     */
+    private boolean isNotBlank(String s) {
+        return s != null && !s.isBlank();
+    }
+
+    private String joinClasspathJar(List<File> jars) {
+        if (!jars.isEmpty()) {
+            return String.join(File.pathSeparator, jars.stream().map(File::getAbsolutePath).toList());
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Create a test file and delete it on exit.
+     *
+     * @return this operation instance
+     */
+    private File tempFile() throws IOException {
+        var temp = File.createTempFile("testng", ".xml");
+        temp.deleteOnExit();
+        return temp;
+    }
+
+    @SuppressFBWarnings("PATH_TRAVERSAL_IN")
+    private File writeDefaultSuite() throws IOException {
+        var temp = tempFile();
+        try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
+            bufWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                    "<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">" +
+                    "<suite name=\"bld Default Suite\" verbose=\"2\">" +
+                    "<test name=\"All Packages\">" +
+                    "<packages>");
+            for (var p : packages_) {
+                bufWriter.write(String.format("<package name=\"%s\"/>", p));
+            }
+            bufWriter.write("</packages></test></suite>");
+        }
+        return temp;
     }
 
     /**
