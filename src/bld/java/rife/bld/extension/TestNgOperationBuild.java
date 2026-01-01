@@ -90,8 +90,7 @@ public class TestNgOperationBuild extends Project {
 
     @Override
     public void test() throws Exception {
-        var os = System.getProperty("os.name");
-        if (os != null && os.toLowerCase().contains("linux")) {
+        if (ExecOperation.isLinux()) {
             new ExecOperation()
                     .fromProject(this)
                     .command("scripts/cliargs.sh")
