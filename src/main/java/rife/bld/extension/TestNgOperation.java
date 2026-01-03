@@ -18,7 +18,7 @@ package rife.bld.extension;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import rife.bld.BaseProject;
-import rife.bld.extension.tools.ClassPathUtils;
+import rife.bld.extension.tools.ClasspathUtils;
 import rife.bld.extension.tools.TextUtils;
 import rife.bld.operations.TestOperation;
 import rife.bld.operations.exceptions.ExitStatusException;
@@ -103,9 +103,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
             args.add("-cp");
             if (testClasspath_.isEmpty()) {
-                args.add(ClassPathUtils.buildClassPath(ClassPathUtils.joinClasspathJar(project_.testClasspathJars()),
-                        ClassPathUtils.joinClasspathJar(project_.compileClasspathJars()),
-                        ClassPathUtils.joinClasspathJar(project_.providedClasspathJars()),
+                args.add(ClasspathUtils.buildClasspath(ClasspathUtils.joinClasspathJar(project_.testClasspathJars()),
+                        ClasspathUtils.joinClasspathJar(project_.compileClasspathJars()),
+                        ClasspathUtils.joinClasspathJar(project_.providedClasspathJars()),
                         project_.buildMainDirectory().getAbsolutePath(),
                         project_.buildTestDirectory().getAbsolutePath()));
             } else {
