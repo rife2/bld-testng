@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestNgOperation extends TestOperation<TestNgOperation, List<String>> {
+
     private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
     /**
      * The methods to run.

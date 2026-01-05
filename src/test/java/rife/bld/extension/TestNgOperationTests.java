@@ -42,12 +42,14 @@ import static org.assertj.core.api.Assertions.*;
  */
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class TestNgOperationTests {
+
     private static final String BAR = "bar";
     private static final String FOO = "foo";
 
     @Nested
     @DisplayName("Directory Tests")
     class DirectoryTests {
+
         private final File foo = new File("FOO");
 
         @Test
@@ -72,6 +74,7 @@ class TestNgOperationTests {
     @Nested
     @DisplayName("Execute Tests")
     class ExecuteTests {
+
         @Test
         void execute() {
             assertThatThrownBy(() ->
@@ -126,6 +129,7 @@ class TestNgOperationTests {
     @Nested
     @DisplayName("Options Tests")
     class OptionsTests {
+
         @Test
         void alwaysRunListeners() {
             var op = new TestNgOperation().alwaysRunListeners(false);
@@ -483,6 +487,7 @@ class TestNgOperationTests {
         @Nested
         @DisplayName("Source Dir Tests")
         class SourceDirTests {
+
             private final File bar = new File(BAR);
             private final File foo = new File(FOO);
             private final String foobar = String.format("%s;%s", foo.getAbsolutePath(), bar.getAbsolutePath());
@@ -527,6 +532,7 @@ class TestNgOperationTests {
         @Nested
         @DisplayName("XML Path In Jar Tests")
         class XmlPathInJarTests {
+
             private final File foo = new File(FOO);
 
             @Test
@@ -552,6 +558,7 @@ class TestNgOperationTests {
     @Nested
     @DisplayName("Suite Tests")
     class SuiteTests {
+
         @Test
         void suiteName() {
             var op = new TestNgOperation().suiteName(FOO);

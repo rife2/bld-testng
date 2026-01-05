@@ -30,6 +30,7 @@ import static rife.bld.dependencies.Scope.*;
 import static rife.bld.operations.JavadocOptions.DocLinkOption.NO_MISSING;
 
 public class TestNgOperationBuild extends Project {
+
     public TestNgOperationBuild() {
         pkg = "rife.bld.extension";
         name = "bld-testng";
