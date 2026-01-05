@@ -104,11 +104,16 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
             args.add("-cp");
             if (testClasspath_.isEmpty()) {
-                args.add(ClasspathUtils.buildClasspath(ClasspathUtils.joinClasspathJar(project_.testClasspathJars()),
-                        ClasspathUtils.joinClasspathJar(project_.compileClasspathJars()),
-                        ClasspathUtils.joinClasspathJar(project_.providedClasspathJars()),
-                        project_.buildMainDirectory().getAbsolutePath(),
-                        project_.buildTestDirectory().getAbsolutePath()));
+                args.add(
+                        ClasspathUtils.buildClasspath(
+                                ClasspathUtils.joinClasspathJar(
+                                        project_.testClasspathJars(),
+                                        project_.compileClasspathJars(),
+                                        project_.providedClasspathJars()
+                                ),
+                                project_.buildMainDirectory().getAbsolutePath(),
+                                project_.buildTestDirectory().getAbsolutePath())
+                );
             } else {
                 args.add(String.join(File.pathSeparator, testClasspath_));
             }
