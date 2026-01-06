@@ -206,9 +206,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation dependencyInjectorFactory(String injectorFactory) {
-        if (TextUtils.isNotBlank(injectorFactory)) {
-            options_.put("-dependencyinjectorfactory", injectorFactory);
-        }
+        addOption("-dependencyinjectorfactory", injectorFactory);
         return this;
     }
 
@@ -221,9 +219,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation directory(String directoryPath) {
-        if (TextUtils.isNotBlank(directoryPath)) {
-            options_.put("-d", directoryPath);
-        }
+        addOption("-d", directoryPath);
         return this;
     }
 
@@ -672,9 +668,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation reporter(String reporter) {
-        if (TextUtils.isNotBlank(reporter)) {
-            options_.put("-reporter", reporter);
-        }
+        addOption("-reporter", reporter);
         return this;
     }
 
@@ -804,9 +798,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation suiteName(String name) {
-        if (TextUtils.isNotBlank(name)) {
-            options_.put("-suitename", '"' + name + '"');
-        }
+        addOption("-suitename", '"' + name + '"');
         return this;
     }
 
@@ -930,9 +922,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation testJar(String jar) {
-        if (TextUtils.isNotBlank(jar)) {
-            options_.put("-testjar", jar);
-        }
+        addOption("-testjar", jar);
         return this;
     }
 
@@ -944,9 +934,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation testName(String name) {
-        if (TextUtils.isNotBlank(name)) {
-            options_.put("-testname", '"' + name + '"');
-        }
+        addOption("-testname", '"' + name + '"');
         return this;
     }
 
@@ -984,9 +972,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation testRunFactory(String factory) {
-        if (TextUtils.isNotBlank(factory)) {
-            options_.put("-testrunfactory", factory);
-        }
+        addOption("-testrunfactory", factory);
         return this;
     }
 
@@ -1012,9 +998,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation threadPoolFactoryClass(String factoryClass) {
-        if (TextUtils.isNotBlank(factoryClass)) {
-            options_.put("-threadpoolfactoryclass", factoryClass);
-        }
+        addOption("-threadpoolfactoryclass", factoryClass);
         return this;
     }
 
@@ -1067,9 +1051,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation xmlPathInJar(String path) {
-        if (TextUtils.isNotBlank(path)) {
-            options_.put("-xmlpathinjar", path);
-        }
+        addOption("-xmlpathinjar", path);
         return this;
     }
 
@@ -1155,5 +1137,11 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
          * Continue failure policy.
          */
         CONTINUE
+    }
+
+    private void addOption(String key, String value) {
+        if (TextUtils.isNotBlank(value)) {
+            options_.put(key, value);
+        }
     }
 }
