@@ -106,7 +106,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
             if (testClasspath_.isEmpty()) {
                 args.add(
                         ClasspathUtils.buildClasspath(
-                                ClasspathUtils.joinClasspathJar(
+                                ClasspathUtils.joinClasspath(
                                         project_.testClasspathJars(),
                                         project_.compileClasspathJars(),
                                         project_.providedClasspathJars()
