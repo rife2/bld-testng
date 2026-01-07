@@ -105,7 +105,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
             args.add("-cp");
             if (testClasspath_.isEmpty()) {
                 args.add(
-                        ClasspathUtils.buildClasspath(
+                        ClasspathUtils.joinClasspath(
                                 ClasspathUtils.joinClasspath(
                                         project_.testClasspathJars(),
                                         project_.compileClasspathJars(),
