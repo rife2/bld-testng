@@ -167,7 +167,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     @SuppressFBWarnings("EI_EXPOSE_REP2")
     public TestNgOperation fromProject(BaseProject project) {
         project_ = project;
-        directory(Path.of(project.buildDirectory().getPath(), "test-output").toString());
+        directory(new File(project.buildDirectory(), "test-output"));
         return this;
     }
 
