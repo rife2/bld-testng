@@ -18,7 +18,7 @@ package rife.bld.extension;
 
 import rife.bld.BuildCommand;
 import rife.bld.Project;
-import rife.bld.extension.tools.IOUtils;
+import rife.bld.extension.tools.IOTools;
 import rife.bld.publish.PublishDeveloper;
 import rife.bld.publish.PublishLicense;
 import rife.bld.publish.PublishScm;
@@ -102,7 +102,7 @@ public class TestNgOperationBuild extends Project {
         }
 
         var op = testOperation().fromProject(this);
-        op.testToolOptions().reportsDir(IOUtils.resolveFile(buildDirectory(), "test-results", "test"));
+        op.testToolOptions().reportsDir(IOTools.resolveFile(buildDirectory(), "test-results", "test"));
         op.execute();
     }
 
