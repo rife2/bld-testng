@@ -47,12 +47,13 @@ public class TestNgOperationBuild extends Project {
         scope(compile)
                 .include(dependency("com.uwyn.rife2", "bld-extensions-tools",
                         version(0, 9, 0, "SNAPSHOT")))
-                .include(dependency("com.uwyn.rife2", "bld", version(2, 3, 0)));
+                .include(dependency("com.uwyn.rife2", "bld",
+                        version(2, 3, 1, "SNAPSHOT")));
         scope(provided)
                 .include(dependency("com.github.spotbugs", "spotbugs-annotations",
                         version(4, 9, 8)));
         scope(test)
-                .include(dependency("org.testng", "testng", version(7, 11, 0)))
+                .include(dependency("org.testng", "testng", version(7, 12, 0)))
                 .include(dependency("org.junit.jupiter", "junit-jupiter", junit))
                 .include(dependency("org.junit.platform", "junit-platform-console-standalone", junit))
                 .include(dependency("org.assertj", "assertj-core", version(3, 27, 6)));
