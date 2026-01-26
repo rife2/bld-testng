@@ -700,7 +700,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation packages(Collection<String> name) {
         if (ObjectTools.isNotEmpty(name)) {
-            packages_.addAll(name.stream().filter(TextTools::isNotBlank).toList());
+            packages_.addAll(filterBlanks(name));
         }
         return this;
     }
@@ -962,7 +962,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation suites(Collection<String> suite) {
         if (ObjectTools.isNotEmpty(suite)) {
-            suites_.addAll(suite.stream().filter(TextTools::isNotBlank).toList());
+            suites_.addAll(filterBlanks(suite));
         }
         return this;
     }
