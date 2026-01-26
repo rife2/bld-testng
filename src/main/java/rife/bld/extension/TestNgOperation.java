@@ -45,25 +45,13 @@ import java.util.stream.Collectors;
 public class TestNgOperation extends TestOperation<TestNgOperation, List<String>> {
 
     private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
-    /**
-     * The methods to run.
-     */
+    private final Set<String> excludeGroups_ = new HashSet<>();
+    private final Set<String> groups_ = new HashSet<>();
     private final Set<String> methods_ = new HashSet<>();
-    /**
-     * The run options.
-     */
     private final Map<String, String> options_ = new ConcurrentHashMap<>();
-    /**
-     * The suite packages to run.
-     */
     private final Set<String> packages_ = new HashSet<>();
-    /**
-     * The suites to run.
-     */
     private final Set<String> suites_ = new HashSet<>();
-    /**
-     * The classpath entries used for running tests.
-     */
+    private final Set<String> testClasses_ = new HashSet<>();
     private final Set<String> testClasspath_ = new HashSet<>();
     private BaseProject project_;
 
@@ -116,7 +104,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                                 project_.buildTestDirectory().getAbsolutePath())
                 );
             } else {
-                args.add(String.join(File.pathSeparator, testClasspath_));
+                args.add(String.join(File.pathSeparator, filterBlanks(testClasspath_)));
             }
 
             args.add("org.testng.TestNG");
@@ -126,9 +114,39 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                 args.add(v);
             });
 
+            while (!project_.arguments().isEmpty()) {
+                var arg = project_.arguments().get(0);
+
+                String prefix;
+                Collection<String> targetCollection;
+
+                if (arg.startsWith("-testclass=")) {
+                    prefix = "-testclass=";
+                    targetCollection = testClasses_;
+                } else if (arg.startsWith("-methods=")) {
+                    prefix = "-methods=";
+                    targetCollection = methods_;
+                } else if (arg.startsWith("-groups=")) {
+                    prefix = "-groups=";
+                    targetCollection = groups_;
+                } else if (arg.startsWith("-excludegroups=")) {
+                    prefix = "-excludegroups=";
+                    targetCollection = excludeGroups_;
+                } else {
+                    break;
+                }
+
+                var value = arg.substring(prefix.length());
+                targetCollection.addAll(Arrays.asList(value.split(",")));
+                project_.arguments().remove(0);
+            }
+
+            boolean hasClasses = ObjectTools.isNotEmpty(testClasses_);
+            boolean hasMethods = ObjectTools.isNotEmpty(methods_);
+
             if (ObjectTools.isNotEmpty(suites_)) {
                 args.addAll(suites_);
-            } else if (!options_.containsKey("-testclass")) {
+            } else if (!hasClasses && !hasMethods) {
                 try {
                     args.add(writeDefaultSuite().getAbsolutePath());
                 } catch (IOException ioe) {
@@ -140,9 +158,24 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                 }
             }
 
-            if (ObjectTools.isNotEmpty(methods_)) {
+            if (hasClasses) {
+                args.add("-testclass");
+                args.add(String.join(",", testClasses_));
+            }
+
+            if (hasMethods) {
                 args.add("-methods");
                 args.add(String.join(",", methods_));
+            }
+
+            if (ObjectTools.isNotEmpty(groups_)) {
+                args.add("-groups");
+                args.add(String.join(",", groups_));
+            }
+
+            if (ObjectTools.isNotEmpty(excludeGroups_)) {
+                args.add("-excludegroups");
+                args.add(String.join(",", excludeGroups_));
             }
 
             if (LOGGER.isLoggable(Level.FINE) && !silent()) {
@@ -249,6 +282,16 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
+     * Returns the list of groups to exclude from this run.
+     *
+     * @return the set of groups
+     */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
+    public Set<String> excludeGroups() {
+        return excludeGroups_;
+    }
+
+    /**
      * The list of groups you want to be excluded from this run.
      *
      * @param group one or more groups
@@ -271,7 +314,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation excludeGroups(Collection<String> group) {
         if (ObjectTools.isNotEmpty(group)) {
-            options_.put("-excludegroups", String.join(",", filterBlanks(group)));
+            excludeGroups_.addAll(filterBlanks(group));
         }
         return this;
     }
@@ -316,6 +359,16 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
+     * Returns the list of groups to run.
+     *
+     * @return the set of groups
+     */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
+    public Set<String> groups() {
+        return groups_;
+    }
+
+    /**
      * The list of groups you want to run.
      *
      * <p>For example: {@code "windows", "linux", "regression}</p>
@@ -342,7 +395,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation groups(Collection<String> group) {
         if (ObjectTools.isNotEmpty(group)) {
-            options_.put("-groups", String.join(",", filterBlanks(group)));
+            groups_.addAll(filterBlanks(group));
         }
         return this;
     }
@@ -513,7 +566,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation methods(Collection<String> method) {
         if (ObjectTools.isNotEmpty(method)) {
-            methods_.addAll(method);
+            methods_.addAll(filterBlanks(method));
         }
         return this;
     }
@@ -946,7 +999,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation testClass(Collection<String> aClass) {
         if (ObjectTools.isNotEmpty(aClass)) {
-            options_.put("-testclass", String.join(",", filterBlanks(aClass)));
+            testClasses_.addAll(filterBlanks(aClass));
         }
         return this;
     }

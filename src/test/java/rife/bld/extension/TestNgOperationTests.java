@@ -76,53 +76,88 @@ class TestNgOperationTests {
     class ExecuteTests {
 
         @Test
-        void execute() {
-            assertThatThrownBy(() ->
-                    new TestNgOperation().fromProject(new Project())
-                            .testClass("rife.bld.extension.TestNgExampleTests")
-                            .execute())
-                    .as("with testClass").isInstanceOf(ExitStatusException.class);
-
+        void executeWithInvalidSuite() {
             assertThatThrownBy(() ->
                     new TestNgOperation().fromProject(new Project())
                             .suites("src/test/resources/testng.xml")
                             .execute())
-                    .as("with suites").isInstanceOf(ExitStatusException.class);
+                    .as("with suites")
+                    .isInstanceOf(ExitStatusException.class);
+        }
 
+        @Test
+        void executeWithMethods() {
             assertThatCode(() ->
                     new TestNgOperation().fromProject(new Project())
                             .methods("rife.bld.extension.TestNgExampleTests.foo")
                             .execute())
-                    .as("with methods").isInstanceOf(ExitStatusException.class);
+                    .as("with methods")
+                    .isInstanceOf(ExitStatusException.class);
+        }
 
-            assertThatCode(() ->
-                    new TestNgOperation().fromProject(new Project())
-                            .suites("src/test/resources/testng2.xml")
-                            .execute())
-                    .as("suite 2").doesNotThrowAnyException();
-
-            assertThatCode(() ->
-                    new TestNgOperation().fromProject(new Project())
-                            .suites("src/test/resources/testng2.xml")
-                            .log(2)
-                            .execute())
-                    .as("suite 2 - log ").doesNotThrowAnyException();
-
+        @Test
+        void executeWithRunClasspath() {
             assertThatCode(() ->
                     new TestNgOperation().fromProject(new Project())
                             .suites("src/test/resources/testng2.xml")
                             .testClasspath("lib/test/*", "build/main", "build/test")
                             .log(2)
                             .execute())
-                    .as("with run classpath").doesNotThrowAnyException();
+                    .as("with run classpath")
+                    .doesNotThrowAnyException();
+        }
 
+        @Test
+        void executeWithRunClasspathAsList() {
             assertThatCode(() ->
                     new TestNgOperation().fromProject(new Project())
                             .suites("src/test/resources/testng2.xml")
                             .testClasspath(List.of("lib/test/*", "build/main", "build/test"))
                             .log(2)
                             .execute())
-                    .as("with run classpath as list").doesNotThrowAnyException();
+                    .as("with run classpath as list")
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void executeWithSuite() {
+            assertThatCode(() ->
+                    new TestNgOperation().fromProject(new Project())
+                            .suites("src/test/resources/testng2.xml")
+                            .execute())
+                    .as("with suite")
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void executeWithSuiteAndLog() {
+            assertThatCode(() ->
+                    new TestNgOperation().fromProject(new Project())
+                            .suites("src/test/resources/testng2.xml")
+                            .log(2)
+                            .execute())
+                    .as("with suite log")
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void executeWithTestClass() {
+            assertThatThrownBy(() ->
+                    new TestNgOperation().fromProject(new Project())
+                            .testClass("rife.bld.extension.TestNgExampleTests")
+                            .execute())
+                    .as("with testClass")
+                    .isInstanceOf(ExitStatusException.class);
+        }
+
+        @Test
+        void executeWithTestClassAgain() {
+            assertThatCode(() ->
+                    new TestNgOperation().fromProject(new Project())
+                            .testClass("rife.bld.extension.TestNgExampleTests")
+                            .execute())
+                    .as("with methods")
+                    .isInstanceOf(ExitStatusException.class);
         }
     }
 
@@ -223,11 +258,11 @@ class TestNgOperationTests {
 
         @Test
         void excludeGroups() {
-            var op = new TestNgOperation().excludeGroups(FOO, BAR);
-            assertThat(op.options().get("-excludegroups")).isEqualTo(String.format("%s,%s", FOO, BAR));
+            var op = new TestNgOperation().excludeGroups(FOO, BAR, FOO);
+            assertThat(op.excludeGroups()).containsExactly(BAR, FOO);
 
-            op = new TestNgOperation().excludeGroups(List.of(FOO, BAR));
-            assertThat(op.options().get("-excludegroups")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+            op = new TestNgOperation().excludeGroups(List.of(FOO, "", BAR));
+            assertThat(op.excludeGroups()).as("as list").containsExactly(BAR, FOO);
         }
 
         @Test
@@ -259,12 +294,11 @@ class TestNgOperationTests {
 
         @Test
         void groups() {
-            var op = new TestNgOperation().groups(FOO, BAR);
-            assertThat(op.options().get("-groups")).isEqualTo(String.format("%s,%s", FOO, BAR));
+            var op = new TestNgOperation().groups(FOO, BAR, FOO);
+            assertThat(op.groups()).containsExactly(BAR, FOO);
 
-            op.groups(List.of("group3", "group4"));
-            assertThat(op.options().get("-groups")).isEqualTo("group3,group4");
-
+            op.groups(List.of("group3", "group4", ""));
+            assertThat(op.groups()).hasSize(4).contains("group3", "group4");
         }
 
         @Test
@@ -320,10 +354,10 @@ class TestNgOperationTests {
 
         @Test
         void methods() {
-            var op = new TestNgOperation().methods(FOO, BAR);
+            var op = new TestNgOperation().methods(FOO, BAR, FOO);
             assertThat(op.methods()).containsExactly(BAR, FOO);
 
-            new TestNgOperation().methods(List.of(FOO, BAR));
+            op = new TestNgOperation().methods(List.of(FOO, BAR, BAR, ""));
             assertThat(op.methods()).containsExactly(BAR, FOO);
         }
 
@@ -433,16 +467,6 @@ class TestNgOperationTests {
 
             ops = new TestNgOperation().spiListenersToSkip(List.of(FOO, BAR));
             assertThat(ops.options().get("-spilistenerstoskip")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
-        }
-
-        @Test
-        void testClass() {
-            var op = new TestNgOperation().testClass(FOO, BAR);
-            assertThat(op.options().get("-testclass")).isEqualTo(String.format("%s,%s", FOO, BAR));
-
-            new TestNgOperation().testClass(List.of(FOO, BAR));
-            assertThat(op.options().get("-testclass")).as("as list")
-                    .isEqualTo(String.format("%s,%s", FOO, BAR));
         }
 
         @Test
