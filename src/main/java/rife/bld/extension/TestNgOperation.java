@@ -220,6 +220,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * This sets the default maximum number of threads to use for data providers when running tests in parallel.
+     * <p>
      * It will only take effect if the parallel mode has been selected (for example, with the
      * {@link #parallel(Parallel) parallel} option). This can be overridden in the suite definition.
      *
@@ -728,7 +729,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         return this;
     }
 
-    /**
+    /**    private String suiteName;
+
      * Specifies the port number.
      *
      * @param port the port
@@ -796,7 +798,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * The directories where your javadoc annotated test sources are. This option is only necessary
-     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * if you are using javadoc type annotations    private String suiteName;
+. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
      * @param directory one or more directories
@@ -906,6 +909,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * This specifies the default name of the test suite, if not specified in the suite definition file or source code.
+     * <p>
      * This option is ignored if the {@code suite.xml} file or the source code specifies a different suite name.
      *
      * @param name the name
@@ -918,6 +922,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * Specifies the size of the thread pool to use to run suites.
+     * <p>
      * Required if no {@link #packages(String...)} specified.
      *
      * @param poolSize the pool size
@@ -1043,9 +1048,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
-     * Specifies a jar file that contains test classes. If a {@code testng.xml} file is found at the root of that
-     * jar file, it will be used, otherwise, all the test classes found in this jar file will be considered test
-     * classes.
+     * Specifies a jar file that contains test classes.
+     * <p>
+     * If a {@code testng.xml} file is found at the root of that jar file, it will be used, otherwise, all the test
+     * classes found in this jar file will be considered test classes.
      *
      * @param jar the jar
      * @return this operation instance
@@ -1057,6 +1063,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * This specifies the default name of test, if not specified in the suite definition file or source code.
+     * <p>
      * This option is ignored if the {@code suite.xml} file or the source code specifies a different test name.
      *
      * @param name the name
@@ -1111,8 +1118,11 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     }
 
     /**
-     * This sets the default maximum number of threads to use for running tests in parallel. It will only take effect
-     * if the parallel mode has been selected (for example, with the {@link #parallel(Parallel) parallel} option).
+     * This sets the default maximum number of threads to use for running tests in parallel.
+     * <p>
+     * It will only take effect if the parallel mode has been selected (for example, with the
+     * {@link #parallel(Parallel) parallel} option).
+     * <p>
      * This can be overridden in the suite definition.
      *
      * @param count the count
@@ -1178,8 +1188,11 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * This attribute should contain the path to a valid XML file inside the test jar
-     * (e.g. {@code "resources/testng.xml"}). The default is {@code testng.xml}, which means a file called
-     * {@code testng.xml} at the root of the jar file. This option will be ignored unless a test jar is specified.
+     * (e.g. {@code "resources/testng.xml"}).
+     * <p>
+     * The default is {@code testng.xml}, which means a file called {@code testng.xml} at the root of the jar file.
+     * <p>
+     * This option will be ignored unless a test jar is specified.
      *
      * @param path the path
      * @return this operation instance
@@ -1191,8 +1204,11 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * This attribute should contain the path to a valid XML file inside the test jar
-     * (e.g. {@code "resources/testng.xml"}). The default is {@code testng.xml}, which means a file called
-     * {@code testng.xml} at the root of the jar file. This option will be ignored unless a test jar is specified.
+     * (e.g. {@code "resources/testng.xml"}).
+     * <p>
+     * The default is {@code testng.xml}, which means a file called {@code testng.xml} at the root of the jar file.
+     * <p>
+     * This option will be ignored unless a test jar is specified.
      *
      * @param path the path
      * @return this operation instance
@@ -1203,8 +1219,11 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * This attribute should contain the path to a valid XML file inside the test jar
-     * (e.g. {@code "resources/testng.xml"}). The default is {@code testng.xml}, which means a file called
-     * {@code testng.xml} at the root of the jar file. This option will be ignored unless a test jar is specified.
+     * (e.g. {@code "resources/testng.xml"}).
+     * <p>
+     * The default is {@code testng.xml}, which means a file called {@code testng.xml} at the root of the jar file.
+     * <p>
+     * This option will be ignored unless a test jar is specified.
      *
      * @param path the path
      * @return this operation instance
