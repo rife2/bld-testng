@@ -151,10 +151,11 @@ class TestNgOperationTests {
         }
 
         @Test
-        void executeWithTestClassAgain() {
+        void executeWithTestClassAndMethod() {
             assertThatCode(() ->
                     new TestNgOperation().fromProject(new Project())
                             .testClass("rife.bld.extension.TestNgExampleTests")
+                            .methods("rife.bld.extension.TestNgExampleTests.foo")
                             .execute())
                     .as("with methods")
                     .isInstanceOf(ExitStatusException.class);
@@ -166,11 +167,14 @@ class TestNgOperationTests {
     class OptionsTests {
 
         @Test
-        void alwaysRunListeners() {
+        void alwaysRunListenersFalse() {
             var op = new TestNgOperation().alwaysRunListeners(false);
             assertThat(op.options().get("-alwaysrunlisteners")).isEqualTo("false");
+        }
 
-            op = new TestNgOperation().alwaysRunListeners(true);
+        @Test
+        void alwaysRunListenersTrue() {
+            var op = new TestNgOperation().alwaysRunListeners(true);
             assertThat(op.options().get("-alwaysrunlisteners")).isEqualTo("true");
         }
 
@@ -260,35 +264,47 @@ class TestNgOperationTests {
         void excludeGroups() {
             var op = new TestNgOperation().excludeGroups(FOO, BAR, FOO);
             assertThat(op.excludeGroups()).containsExactly(BAR, FOO);
-
-            op = new TestNgOperation().excludeGroups(List.of(FOO, "", BAR));
-            assertThat(op.excludeGroups()).as("as list").containsExactly(BAR, FOO);
         }
 
         @Test
-        void failWheneverEverythingSkipped() {
+        void excludeGroupsAsList() {
+            var op = new TestNgOperation().excludeGroups(List.of(FOO, "", BAR));
+            assertThat(op.excludeGroups()).containsExactly(BAR, FOO);
+        }
+
+        @Test
+        void failWheneverEverythingSkippedFalse() {
             var op = new TestNgOperation().failWhenEverythingSkipped(false);
             assertThat(op.options().get("-failwheneverythingskipped")).isEqualTo("false");
+        }
 
-            op = new TestNgOperation().failWhenEverythingSkipped(true);
+        @Test
+        void failWheneverEverythingSkippedTrue() {
+            var op = new TestNgOperation().failWhenEverythingSkipped(true);
             assertThat(op.options().get("-failwheneverythingskipped")).isEqualTo("true");
         }
 
         @Test
-        void failurePolicy() {
+        void failurePolicyContinue() {
             var op = new TestNgOperation().failurePolicy(TestNgOperation.FailurePolicy.CONTINUE);
             assertThat(op.options().get("-configfailurepolicy")).isEqualTo("continue");
+        }
 
-            op = new TestNgOperation().failurePolicy(TestNgOperation.FailurePolicy.SKIP);
+        @Test
+        void failurePolicySkip() {
+            var op = new TestNgOperation().failurePolicy(TestNgOperation.FailurePolicy.SKIP);
             assertThat(op.options().get("-configfailurepolicy")).isEqualTo("skip");
         }
 
         @Test
-        void generateResultsPerSuite() {
+        void generateResultsPerSuiteFalse() {
             var op = new TestNgOperation().generateResultsPerSuite(false);
             assertThat(op.options().get("-generateResultsPerSuite")).isEqualTo("false");
+        }
 
-            op = new TestNgOperation().generateResultsPerSuite(true);
+        @Test
+        void generateResultsPerSuiteTrue() {
+            var op = new TestNgOperation().generateResultsPerSuite(true);
             assertThat(op.options().get("-generateResultsPerSuite")).isEqualTo("true");
         }
 
@@ -296,27 +312,48 @@ class TestNgOperationTests {
         void groups() {
             var op = new TestNgOperation().groups(FOO, BAR, FOO);
             assertThat(op.groups()).containsExactly(BAR, FOO);
-
-            op.groups(List.of("group3", "group4", ""));
-            assertThat(op.groups()).hasSize(4).contains("group3", "group4");
         }
 
         @Test
-        void ignoreMissedTestName() {
+        void groupsAsList() {
+            var op = new TestNgOperation().groups(List.of(FOO, BAR, ""));
+            assertThat(op.groups()).hasSize(2).contains(FOO, BAR);
+        }
+
+        @Test
+        void ignoreMissedTestNameFalse() {
             var op = new TestNgOperation().ignoreMissedTestName(false);
             assertThat(op.options().get("-ignoreMissedTestNames")).isEqualTo("false");
+        }
 
-            op = new TestNgOperation().ignoreMissedTestName(true);
+        @Test
+        void ignoreMissedTestNameTrue() {
+            var op = new TestNgOperation().ignoreMissedTestName(true);
             assertThat(op.options().get("-ignoreMissedTestNames")).isEqualTo("true");
         }
 
         @Test
-        void includeAllDataDrivenTestsWhenSkipping() {
+        void includeAllDataDrivenTestsWhenSkippingFalse() {
             var op = new TestNgOperation().includeAllDataDrivenTestsWhenSkipping(false);
             assertThat(op.options().get("-includeAllDataDrivenTestsWhenSkipping")).isEqualTo("false");
+        }
 
-            op = new TestNgOperation().includeAllDataDrivenTestsWhenSkipping(true);
+        @Test
+        void includeAllDataDrivenTestsWhenSkippingTrue() {
+            var op = new TestNgOperation().includeAllDataDrivenTestsWhenSkipping(true);
             assertThat(op.options().get("-includeAllDataDrivenTestsWhenSkipping")).isEqualTo("true");
+        }
+
+        @Test
+        void jUnitFalse() {
+            var op = new TestNgOperation().jUnit(false);
+            assertThat(op.options().get("-junit")).isEqualTo("false");
+        }
+
+        @Test
+        void jUnitTrue() {
+            var op = new TestNgOperation().jUnit(true);
+            assertThat(op.options().get("-junit")).isEqualTo("true");
         }
 
         @Test
@@ -326,47 +363,50 @@ class TestNgOperationTests {
         }
 
         @Test
-        void junit() {
-            var op = new TestNgOperation().jUnit(false);
-            assertThat(op.options().get("-junit")).isEqualTo("false");
-
-            op = new TestNgOperation().jUnit(true);
-            assertThat(op.options().get("-junit")).isEqualTo("true");
-        }
-
-        @Test
         void listener() {
             var ops = new TestNgOperation().listener(FOO, BAR);
             assertThat(ops.options().get("-listener")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        }
 
-            ops = new TestNgOperation().listener(List.of(FOO, BAR));
-            assertThat(ops.options().get("-listener")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        @Test
+        void listenerAsList() {
+            var ops = new TestNgOperation().listener(List.of(FOO, BAR));
+            assertThat(ops.options().get("-listener")).isEqualTo(String.format("%s,%s", FOO, BAR));
         }
 
         @Test
         void methodDetectors() {
             var op = new TestNgOperation().methodSelectors(FOO, BAR);
             assertThat(op.options().get("-methodselectors")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        }
 
-            op = new TestNgOperation().methodSelectors(List.of(FOO, BAR));
-            assertThat(op.options().get("-methodselectors")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        @Test
+        void methodDetectorsAsList() {
+            var op = new TestNgOperation().methodSelectors(List.of(FOO, BAR));
+            assertThat(op.options().get("-methodselectors")).isEqualTo(String.format("%s,%s", FOO, BAR));
         }
 
         @Test
         void methods() {
             var op = new TestNgOperation().methods(FOO, BAR, FOO);
             assertThat(op.methods()).containsExactly(BAR, FOO);
+        }
 
-            op = new TestNgOperation().methods(List.of(FOO, BAR, BAR, ""));
+        @Test
+        void methodsAsList() {
+            var op = new TestNgOperation().methods(List.of(FOO, BAR, BAR, ""));
             assertThat(op.methods()).containsExactly(BAR, FOO);
         }
 
         @Test
-        void mixed() {
+        void mixedFalse() {
             var op = new TestNgOperation().mixed(false);
             assertThat(op.options().get("-mixed")).isEqualTo("false");
+        }
 
-            op = new TestNgOperation().mixed(true);
+        @Test
+        void mixedTrue() {
+            var op = new TestNgOperation().mixed(true);
             assertThat(op.options().get("-mixed")).isEqualTo("true");
         }
 
@@ -380,48 +420,66 @@ class TestNgOperationTests {
         void names() {
             var ops = new TestNgOperation().testNames(FOO, BAR);
             assertThat(ops.options().get("-testnames")).isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
+        }
 
-            new TestNgOperation().testNames(List.of(FOO, BAR));
-            assertThat(ops.options().get("-testnames")).as("as list").isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
+        @Test
+        void namesAsList() {
+            var ops = new TestNgOperation().testNames(List.of(FOO, BAR));
+            assertThat(ops.options().get("-testnames")).isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
         }
 
         @Test
         void objectFactory() {
             var ops = new TestNgOperation().objectFactory(FOO, BAR);
             assertThat(ops.options().get("-objectfactory")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        }
 
-            ops = new TestNgOperation().objectFactory(List.of(FOO, BAR));
-            assertThat(ops.options().get("-objectfactory")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        @Test
+        void objectFactoryAsList() {
+            var ops = new TestNgOperation().objectFactory(List.of(FOO, BAR));
+            assertThat(ops.options().get("-objectfactory")).isEqualTo(String.format("%s,%s", FOO, BAR));
         }
 
         @Test
         void overrideIncludedMethods() {
             var ops = new TestNgOperation().overrideIncludedMethods(FOO, BAR);
             assertThat(ops.options().get("-overrideincludedmethods")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        }
 
-            ops = new TestNgOperation().overrideIncludedMethods(List.of(FOO, BAR));
-            assertThat(ops.options().get("-overrideincludedmethods")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        @Test
+        void overrideIncludedMethodsAsList() {
+            var ops = new TestNgOperation().overrideIncludedMethods(List.of(FOO, BAR));
+            assertThat(ops.options().get("-overrideincludedmethods")).isEqualTo(String.format("%s,%s", FOO, BAR));
         }
 
         @Test
         void packages() {
             var op = new TestNgOperation().packages(FOO, BAR);
             assertThat(op.packages()).contains(FOO).contains(BAR);
-
-            op = new TestNgOperation().packages(List.of(FOO, BAR));
-            assertThat(op.packages()).as("as list").contains(FOO).contains(BAR);
         }
 
         @Test
-        void parallel() {
+        void packagesAsList() {
+            var op = new TestNgOperation().packages(List.of(FOO, BAR));
+            assertThat(op.packages()).contains(FOO).contains(BAR);
+        }
+
+        @Test
+        void parallelClasses() {
+            var op = new TestNgOperation().parallel(TestNgOperation.Parallel.CLASSES);
+            assertThat(op.options().get("-parallel")).isEqualTo("classes");
+        }
+
+        @Test
+        void parallelMethods() {
+            var op = new TestNgOperation().parallel(TestNgOperation.Parallel.METHODS);
+            assertThat(op.options().get("-parallel")).isEqualTo("methods");
+        }
+
+        @Test
+        void parallelTests() {
             var op = new TestNgOperation().parallel(TestNgOperation.Parallel.TESTS);
             assertThat(op.options().get("-parallel")).isEqualTo("tests");
-
-            op = new TestNgOperation().parallel(TestNgOperation.Parallel.METHODS);
-            assertThat(op.options().get("-parallel")).isEqualTo("methods");
-
-            op = new TestNgOperation().parallel(TestNgOperation.Parallel.CLASSES);
-            assertThat(op.options().get("-parallel")).isEqualTo("classes");
         }
 
         @Test
@@ -431,11 +489,14 @@ class TestNgOperationTests {
         }
 
         @Test
-        void propagateDataProviderFailureAsTestFailure() {
+        void propagateDataProviderFailureAsTestFailureFalse() {
             var op = new TestNgOperation().propagateDataProviderFailureAsTestFailure(false);
             assertThat(op.options().get("-propagateDataProviderFailureAsTestFailure")).isEqualTo("false");
+        }
 
-            op = new TestNgOperation().propagateDataProviderFailureAsTestFailure(true);
+        @Test
+        void propagateDataProviderFailureAsTestFailureTrue() {
+            var op = new TestNgOperation().propagateDataProviderFailureAsTestFailure(true);
             assertThat(op.options().get("-propagateDataProviderFailureAsTestFailure")).isEqualTo("true");
         }
 
@@ -452,21 +513,27 @@ class TestNgOperationTests {
         }
 
         @Test
-        void shareThreadPoolForDataProviders() {
+        void shareThreadPoolForDataProvidersFalse() {
+            var op = new TestNgOperation().shareThreadPoolForDataProviders(false);
+            assertThat(op.options().get("-shareThreadPoolForDataProviders")).isNull();
+        }
+
+        @Test
+        void shareThreadPoolForDataProvidersTrue() {
             var op = new TestNgOperation().shareThreadPoolForDataProviders(true);
             assertThat(op.options().get("-shareThreadPoolForDataProviders")).isEqualTo("true");
-
-            op = new TestNgOperation().shareThreadPoolForDataProviders(false);
-            assertThat(op.options().get("-shareThreadPoolForDataProviders")).isNull();
         }
 
         @Test
         void spiListenersToSkip() {
             var ops = new TestNgOperation().spiListenersToSkip(FOO, BAR);
             assertThat(ops.options().get("-spilistenerstoskip")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        }
 
-            ops = new TestNgOperation().spiListenersToSkip(List.of(FOO, BAR));
-            assertThat(ops.options().get("-spilistenerstoskip")).as("as list").isEqualTo(String.format("%s,%s", FOO, BAR));
+        @Test
+        void spiListenersToSkipAsList() {
+            var ops = new TestNgOperation().spiListenersToSkip(List.of(FOO, BAR));
+            assertThat(ops.options().get("-spilistenerstoskip")).isEqualTo(String.format("%s,%s", FOO, BAR));
         }
 
         @Test
@@ -482,29 +549,38 @@ class TestNgOperationTests {
         }
 
         @Test
-        void useDefaultListeners() {
+        void useDefaultListenersFalse() {
             var op = new TestNgOperation().useDefaultListeners(false);
             assertThat(op.options().get("-usedefaultlisteners")).isEqualTo("false");
+        }
 
-            op = new TestNgOperation().useDefaultListeners(true);
+        @Test
+        void useDefaultListenersTrue() {
+            var op = new TestNgOperation().useDefaultListeners(true);
             assertThat(op.options().get("-usedefaultlisteners")).isEqualTo("true");
         }
 
         @Test
-        void useGlobalThreadPool() {
-            var op = new TestNgOperation().useGlobalThreadPool(true);
-            assertThat(op.options().get("-useGlobalThreadPool")).isEqualTo("true");
-
-            op = new TestNgOperation().useGlobalThreadPool(false);
+        void useGlobalThreadPoolFalse() {
+            var op = new TestNgOperation().useGlobalThreadPool(false);
             assertThat(op.options().get("-useGlobalThreadPool")).isNull();
         }
 
         @Test
-        void verbose() {
+        void useGlobalThreadPoolTrue() {
+            var op = new TestNgOperation().useGlobalThreadPool(true);
+            assertThat(op.options().get("-useGlobalThreadPool")).isEqualTo("true");
+        }
+
+        @Test
+        void verboseLog() {
             var op = new TestNgOperation().log(1);
             assertThat(op.options().get("-log")).isEqualTo("1");
+        }
 
-            op = new TestNgOperation().verbose(1);
+        @Test
+        void verboseVerbose() {
+            var op = new TestNgOperation().verbose(1);
             assertThat(op.options().get("-verbose")).isEqualTo("1");
         }
 
@@ -599,9 +675,12 @@ class TestNgOperationTests {
         void suites() {
             var op = new TestNgOperation().suites(FOO, BAR);
             assertThat(op.suites()).contains(FOO).contains(BAR);
+        }
 
-            op = new TestNgOperation().suites(List.of(FOO, BAR));
-            assertThat(op.suites()).as("as list").contains(FOO).contains(BAR);
+        @Test
+        void suitesAsList() {
+            var op = new TestNgOperation().suites(List.of(FOO, BAR));
+            assertThat(op.suites()).contains(FOO).contains(BAR);
         }
     }
 }
