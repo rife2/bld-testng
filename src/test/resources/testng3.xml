@@ -1,0 +1,21 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<suite name="test suite 3" verbose="1">
+    <test name="hello">
+        <classes>
+            <class name="rife.bld.extension.TestNgExampleTests">
+                <methods>
+                    <include name="verifyHello"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    <test name="message">
+        <classes>
+            <class name="rife.bld.extension.TestNgExampleTests">
+                <methods>
+                    <include name="verifyMessage"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+</suite>

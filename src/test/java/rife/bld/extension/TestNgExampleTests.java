@@ -39,4 +39,9 @@ class TestNgExampleTests {
     void verifyHello() {
         Assert.assertEquals(example.getMessage(), "Hello World!");
     }
+
+    @Test
+    void verifyMessage() {
+        Assert.assertEquals(example.getMessage("Bonjour!"), "Bonjour!");
+    }
 }

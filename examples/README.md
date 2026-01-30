@@ -27,11 +27,20 @@
 ```console
 ./bld compile test -methods=com.example.ExamplesTest.foo,com.example.ExamplesTest.bar
 ```
+
+## Compile and run specific test name(s)
+
+```console
+./bld compile test -testnames="All Packages"
+```
+
 ## Compile and exclude specific groups
 
 ```console
 ./bld compile test -excludegroups=foo,bar
+
 ```
+
 ## Explore
 
 - [View Build File](https://github.com/rife2/bld-testng/blob/master/examples/src/bld/java/com/example/ExamplesBuild.java)

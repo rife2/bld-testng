@@ -33,7 +33,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Run tests with <a href="https;//testng.org/">TestNG</a>.
@@ -53,6 +52,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     private final Set<String> suites_ = new HashSet<>();
     private final Set<String> testClasses_ = new HashSet<>();
     private final Set<String> testClasspath_ = new HashSet<>();
+    private final Set<String> testNames_ = new HashSet<>();
     private BaseProject project_;
 
     @Override
@@ -123,6 +123,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                 if (arg.startsWith("-testclass=")) {
                     prefix = "-testclass=";
                     targetCollection = testClasses_;
+                } else if (arg.startsWith("-testnames")) {
+                    prefix = "-testnames=";
+                    targetCollection = testNames_;
                 } else if (arg.startsWith("-methods=")) {
                     prefix = "-methods=";
                     targetCollection = methods_;
@@ -166,6 +169,11 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
             if (hasMethods) {
                 args.add("-methods");
                 args.add(String.join(",", methods_));
+            }
+
+            if (ObjectTools.isNotEmpty(testNames_)) {
+                args.add("-testnames");
+                args.add(String.join(",", testNames_));
             }
 
             if (ObjectTools.isNotEmpty(groups_)) {
@@ -729,8 +737,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         return this;
     }
 
-    /**    private String suiteName;
-
+    /**
+     * private String suiteName;
+     * <p>
      * Specifies the port number.
      *
      * @param port the port
@@ -798,8 +807,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
     /**
      * The directories where your javadoc annotated test sources are. This option is only necessary
-     * if you are using javadoc type annotations    private String suiteName;
-. (e.g. {@code "src/test"} or
+     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
      * @param directory one or more directories
@@ -1070,8 +1078,18 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation testName(String name) {
-        addOption("-testname", '"' + name + '"');
+        addOption("-testname", name);
         return this;
+    }
+
+    /**
+     * Returns the list of test names to run.
+     *
+     * @return the set of test names
+     */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
+    public Set<String> testNames() {
+        return testNames_;
     }
 
     /**
@@ -1097,11 +1115,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation testNames(Collection<String> name) {
         if (ObjectTools.isNotEmpty(name)) {
-            options_.put("-testnames",
-                    name.stream()
-                            .filter(TextTools::isNotBlank)
-                            .map(s -> '"' + s + '"')
-                            .collect(Collectors.joining(",")));
+            testNames_.addAll(filterBlanks(name));
         }
         return this;
     }

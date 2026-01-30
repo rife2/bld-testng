@@ -33,6 +33,7 @@ public TestOperation<?, ?> testOperation() {
 
 ./bld compile test -testclass=com.example.Test,com.sample.Test
 ./bld compile test -methods=com.example.Test.foo,com.example.Test.bar
+./bld compile test -testnames=Test1,Test2
 ./bld compile test -groups=group1,group2
 ./bld compile test -excludegroups=group1,group3
 ```

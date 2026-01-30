@@ -25,8 +25,11 @@ package rife.bld.extension;
 @SuppressWarnings({"PMD.TestClassWithoutTestCases", "unused"})
 class TestNgExample {
 
-    @SuppressWarnings("SameReturnValue")
     public String getMessage() {
-        return "Hello World!";
+        return getMessage("Hello World!");
+    }
+
+    public String getMessage(String message) {
+        return message;
     }
 }

@@ -17,6 +17,7 @@
 package rife.bld.extension;
 
 import org.assertj.core.api.AutoCloseableSoftAssertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -40,11 +44,23 @@ import static org.assertj.core.api.Assertions.*;
  * @author <a href="https://erik.thauvin.net/">Erik C. Thauvin</a>
  * @since 1.0
  */
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.UseUtilityClass"})
 class TestNgOperationTests {
 
     private static final String BAR = "bar";
     private static final String FOO = "foo";
+
+    @BeforeAll
+    static void beforeAll() {
+        var level = Level.ALL;
+        var logger = Logger.getLogger(TestNgOperation.class.getName());
+        var consoleHandler = new ConsoleHandler();
+
+        consoleHandler.setLevel(level);
+        logger.addHandler(consoleHandler);
+        logger.setLevel(level);
+        logger.setUseParentHandlers(false);
+    }
 
     @Nested
     @DisplayName("Directory Tests")
@@ -82,6 +98,18 @@ class TestNgOperationTests {
                             .suites("src/test/resources/testng.xml")
                             .execute())
                     .as("with suites")
+                    .isInstanceOf(ExitStatusException.class);
+        }
+
+        @Test
+        void executeWithInvalidTestNames() {
+            assertThatCode(() ->
+                    new TestNgOperation().fromProject(new Project())
+                            .suites("src/test/resources/testng2.xml")
+                            .testClasspath("lib/test/*", "build/main", "build/test")
+                            .testNames("foo", "bar")
+                            .execute())
+                    .as("with run classpath")
                     .isInstanceOf(ExitStatusException.class);
         }
 
@@ -159,6 +187,32 @@ class TestNgOperationTests {
                             .execute())
                     .as("with methods")
                     .isInstanceOf(ExitStatusException.class);
+        }
+
+        @Test
+        void executeWithTestName() {
+            assertThatCode(() ->
+                    new TestNgOperation().fromProject(new Project())
+                            .suites("src/test/resources/testng2.xml")
+                            .testClasspath("lib/test/*", "build/main", "build/test")
+                            .testNames("exclude fail")
+                            .log(2)
+                            .execute())
+                    .as("with run classpath")
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        void executeWithTestNames() {
+            assertThatCode(() ->
+                    new TestNgOperation().fromProject(new Project())
+                            .suites("src/test/resources/testng3.xml")
+                            .testClasspath("lib/test/*", "build/main", "build/test")
+                            .testNames("hello", "message")
+                            .log(2)
+                            .execute())
+                    .as("with run classpath")
+                    .doesNotThrowAnyException();
         }
     }
 
@@ -413,19 +467,7 @@ class TestNgOperationTests {
         @Test
         void name() {
             var op = new TestNgOperation().testName(FOO);
-            assertThat(op.options().get("-testname")).isEqualTo("\"" + FOO + '\"');
-        }
-
-        @Test
-        void names() {
-            var ops = new TestNgOperation().testNames(FOO, BAR);
-            assertThat(ops.options().get("-testnames")).isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
-        }
-
-        @Test
-        void namesAsList() {
-            var ops = new TestNgOperation().testNames(List.of(FOO, BAR));
-            assertThat(ops.options().get("-testnames")).isEqualTo(String.format("\"%s\",\"%s\"", FOO, BAR));
+            assertThat(op.options().get("-testname")).isEqualTo(FOO);
         }
 
         @Test
@@ -534,6 +576,18 @@ class TestNgOperationTests {
         void spiListenersToSkipAsList() {
             var ops = new TestNgOperation().spiListenersToSkip(List.of(FOO, BAR));
             assertThat(ops.options().get("-spilistenerstoskip")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        }
+
+        @Test
+        void testNames() {
+            var ops = new TestNgOperation().testNames(FOO, BAR);
+            assertThat(ops.testNames()).containsExactly(BAR, FOO);
+        }
+
+        @Test
+        void testNamesAsList() {
+            var ops = new TestNgOperation().testNames(List.of(FOO, BAR));
+            assertThat(ops.testNames()).containsExactly(BAR, FOO);
         }
 
         @Test
