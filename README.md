@@ -21,6 +21,18 @@ To run the tests with TestNG, add the following to your build file:
 
 ```java
 @Override
+public void test() throws Exception {
+    new TestNgOperation()
+            .fromProject(this)
+            .packages("com.example")
+            .execute();
+}
+```
+
+or if using [BaseProject](https://rife2.github.io/bld/rife/bld/BaseProject.html): 
+
+```java
+@Override
 public TestOperation<?, ?> testOperation() {
     return new TestNgOperation()
             .fromProject(this)
