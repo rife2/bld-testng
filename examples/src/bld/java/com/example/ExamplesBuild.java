@@ -63,6 +63,7 @@ public class ExamplesBuild extends BaseProject {
     public TestOperation<?, ?> testOperation() {
         return new TestNgOperation()
                 .fromProject(this)
-                .packages("com.example");
+                .packages(pkg)
+                .log(2);
     }
 }

@@ -34,10 +34,17 @@
 ./bld compile test -testnames="All Packages"
 ```
 
-## Compile and exclude specific groups
+## Compile and run tests excluding specific groups
 
 ```console
 ./bld compile test -excludegroups=foo,bar
+
+```
+
+## Compile and run tests with specific verbosity
+
+```console
+./bld compile test -log=5
 
 ```
 

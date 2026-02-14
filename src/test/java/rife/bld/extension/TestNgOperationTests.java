@@ -277,7 +277,6 @@ class TestNgOperationTests {
                     .threadPoolFactoryClass("poolClass")
                     .useDefaultListeners(true)
                     .useGlobalThreadPool(true)
-                    .verbose(1)
                     .xmlPathInJar("jarPath")
                     .executeConstructProcessCommandList();
 
@@ -426,6 +425,12 @@ class TestNgOperationTests {
         void listenerAsList() {
             var ops = new TestNgOperation().listener(List.of(FOO, BAR));
             assertThat(ops.options().get("-listener")).isEqualTo(String.format("%s,%s", FOO, BAR));
+        }
+
+        @Test
+        void log() {
+            var op = new TestNgOperation().log(1);
+            assertThat(op.options().get("-log")).isEqualTo("1");
         }
 
         @Test
@@ -627,15 +632,9 @@ class TestNgOperationTests {
         }
 
         @Test
-        void verboseLog() {
-            var op = new TestNgOperation().log(1);
-            assertThat(op.options().get("-log")).isEqualTo("1");
-        }
-
-        @Test
-        void verboseVerbose() {
+        void verbose() {
             var op = new TestNgOperation().verbose(1);
-            assertThat(op.options().get("-verbose")).isEqualTo("1");
+            assertThat(op.options().get("-log")).isEqualTo("1");
         }
 
         @Nested

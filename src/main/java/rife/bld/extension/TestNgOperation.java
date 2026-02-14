@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 public class TestNgOperation extends TestOperation<TestNgOperation, List<String>> {
 
     private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
+    private static final String LOG_ARG = "-log";
     private final Set<String> excludeGroups_ = new HashSet<>();
     private final Set<String> groups_ = new HashSet<>();
     private final Set<String> methods_ = new HashSet<>();
@@ -109,41 +110,50 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
             args.add("org.testng.TestNG");
 
+            while (!project_.arguments().isEmpty()) {
+                var arg = project_.arguments().get(0);
+
+                if (arg.startsWith(LOG_ARG + '=')) {
+                    var level = arg.substring(LOG_ARG.length() + 1);
+                    try {
+                        verbose(Integer.parseInt(level));
+                    } catch (NumberFormatException nfe) {
+                        if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
+                            LOGGER.warning("Invalid value for log level: " + level);
+                        }
+                    }
+                } else {
+                    String prefix;
+                    Collection<String> targetCollection;
+                    if (arg.startsWith("-testclass=")) {
+                        prefix = "-testclass=";
+                        targetCollection = testClasses_;
+                    } else if (arg.startsWith("-testnames")) {
+                        prefix = "-testnames=";
+                        targetCollection = testNames_;
+                    } else if (arg.startsWith("-methods=")) {
+                        prefix = "-methods=";
+                        targetCollection = methods_;
+                    } else if (arg.startsWith("-groups=")) {
+                        prefix = "-groups=";
+                        targetCollection = groups_;
+                    } else if (arg.startsWith("-excludegroups=")) {
+                        prefix = "-excludegroups=";
+                        targetCollection = excludeGroups_;
+                    } else {
+                        break;
+                    }
+
+                    var value = arg.substring(prefix.length());
+                    targetCollection.addAll(Arrays.asList(value.split(",")));
+                }
+                project_.arguments().remove(0);
+            }
+
             options_.forEach((k, v) -> {
                 args.add(k);
                 args.add(v);
             });
-
-            while (!project_.arguments().isEmpty()) {
-                var arg = project_.arguments().get(0);
-
-                String prefix;
-                Collection<String> targetCollection;
-
-                if (arg.startsWith("-testclass=")) {
-                    prefix = "-testclass=";
-                    targetCollection = testClasses_;
-                } else if (arg.startsWith("-testnames")) {
-                    prefix = "-testnames=";
-                    targetCollection = testNames_;
-                } else if (arg.startsWith("-methods=")) {
-                    prefix = "-methods=";
-                    targetCollection = methods_;
-                } else if (arg.startsWith("-groups=")) {
-                    prefix = "-groups=";
-                    targetCollection = groups_;
-                } else if (arg.startsWith("-excludegroups=")) {
-                    prefix = "-excludegroups=";
-                    targetCollection = excludeGroups_;
-                } else {
-                    break;
-                }
-
-                var value = arg.substring(prefix.length());
-                targetCollection.addAll(Arrays.asList(value.split(",")));
-                project_.arguments().remove(0);
-            }
-
             boolean hasClasses = ObjectTools.isNotEmpty(testClasses_);
             boolean hasMethods = ObjectTools.isNotEmpty(methods_);
 
@@ -198,6 +208,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
 
         return args;
     }
+
 
     /**
      * Configures the {@link BaseProject}.
@@ -511,7 +522,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      */
     public TestNgOperation log(int level) {
         if (level >= 0) {
-            options_.put("-log", String.valueOf(level));
+            options_.put(LOG_ARG, String.valueOf(level));
+        } else if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
+            LOGGER.warning("Log level must be >= 0");
         }
         return this;
     }
@@ -1194,10 +1207,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #log(int) #log(int)
      */
     public TestNgOperation verbose(int level) {
-        if (level >= 0) {
-            options_.put("-verbose", String.valueOf(level));
-        }
-        return this;
+        return log(level);
     }
 
     /**

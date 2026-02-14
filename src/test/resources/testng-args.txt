@@ -34,5 +34,4 @@
 -threadpoolfactoryclass
 -usedefaultlisteners
 -useGlobalThreadPool
--verbose
 -xmlpathinjar

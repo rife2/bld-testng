@@ -48,6 +48,7 @@ public TestOperation<?, ?> testOperation() {
 ./bld compile test -testnames=Test1,Test2
 ./bld compile test -groups=group1,group2
 ./bld compile test -excludegroups=group1,group3
+./bld compile test -log=5
 ```
 
 - [View Examples Project](https://github.com/rife2/bld-testng/tree/master/examples)
