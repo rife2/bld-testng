@@ -35,7 +35,9 @@ public class ExamplesBuild extends BaseProject {
 
         repositories = List.of(MAVEN_CENTRAL);
 
-        scope(test).include(dependency("org.testng", "testng", version(7, 12, 0)));
+        scope(test)
+                .include(dependency("org.slf4j", "slf4j-jdk14", "2.0.17"))
+                .include(dependency("org.testng", "testng", version(7, 12, 0)));
     }
 
     public static void main(String[] args) {
