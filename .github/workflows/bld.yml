@@ -23,12 +23,20 @@ jobs:
           distribution: "zulu"
           java-version: ${{ matrix.java-version }}
 
-      - name: Download dependencies [examples]
-        working-directory: examples
+      - name: Download dependencies [example-baseproject]
+        working-directory: examples/example-baseproject
         run: ./bld download
 
-      - name: Run tests with JaCoCo [examples]
-        working-directory: examples
+      - name: Run tests with JaCoCo [example-baseproject]
+        working-directory: examples/example-baseproject
+        run: ./bld compile jacoco
+
+      - name: Download dependencies [example-project]
+        working-directory: examples/example-project
+        run: ./bld download
+
+      - name: Run tests with JaCoCo [example-project]
+        working-directory: examples/example-project
         run: ./bld compile jacoco
 
       - name: Download dependencies

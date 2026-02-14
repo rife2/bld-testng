@@ -1,0 +1,16 @@
+{
+    "java.project.sourcePaths": [
+        "src/main/java",
+        "src/main/resources",
+        "src/test/java",
+        "src/test/resources",
+        "src/bld/java",
+        "src/bld/resources",
+        "src/bld/resources"
+    ],
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.project.referencedLibraries": [
+        "${HOME}/.bld/dist/bld-2.3.0.jar",
+        "lib/**/*.jar"
+    ]
+}

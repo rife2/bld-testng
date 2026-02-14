@@ -17,7 +17,7 @@ For more information, please refer to the [extensions](https://github.com/rife2/
 
 ## Test with TestNG
 
-To run the tests with TestNG, add the following to your build file:
+To execute tests with TestNG, add the following to your build file:
 
 ```java
 @Override
@@ -28,6 +28,8 @@ public void test() throws Exception {
             .execute();
 }
 ```
+- [View Example Project](https://github.com/rife2/bld-testng/tree/master/examples/example-project)
+
 
 or if using [BaseProject](https://rife2.github.io/bld/rife/bld/BaseProject.html): 
 
@@ -39,6 +41,9 @@ public TestOperation<?, ?> testOperation() {
             .packages("com.example");
 }
 ```
+- [View Example Project](https://github.com/rife2/bld-testng/tree/master/examples/example-baseproject)
+
+To run tests:
 
 ```console
 ./bld compile test
@@ -51,7 +56,6 @@ public TestOperation<?, ?> testOperation() {
 ./bld compile test -log=5
 ```
 
-- [View Examples Project](https://github.com/rife2/bld-testng/tree/master/examples)
 
 Please check the [TestNgOperation documentation](https://rife2.github.io/bld-testng/rife/bld/extension/TestNgOperation.html#method-summary) for all available configuration options.
 
