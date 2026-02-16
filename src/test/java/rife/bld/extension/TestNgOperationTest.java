@@ -45,7 +45,7 @@ import static org.assertj.core.api.Assertions.*;
  * @since 1.0
  */
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.UseUtilityClass"})
-class TestNgOperationTests {
+class TestNgOperationTest {
 
     private static final String BAR = "bar";
     private static final String FOO = "foo";

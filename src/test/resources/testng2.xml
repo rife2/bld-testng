@@ -2,7 +2,7 @@
 <suite name="test suite 2" verbose="1">
     <test name="exclude fail">
         <classes>
-            <class name="rife.bld.extension.TestNgExampleTests">
+            <class name="rife.bld.extension.TestNgExampleTest">
                 <methods>
                     <exclude name="foo"/>
                 </methods>

@@ -2,7 +2,7 @@
 <suite name="test suite 3" verbose="1">
     <test name="hello">
         <classes>
-            <class name="rife.bld.extension.TestNgExampleTests">
+            <class name="rife.bld.extension.TestNgExampleTest">
                 <methods>
                     <include name="verifyHello"/>
                 </methods>
@@ -11,7 +11,7 @@
     </test>
     <test name="message">
         <classes>
-            <class name="rife.bld.extension.TestNgExampleTests">
+            <class name="rife.bld.extension.TestNgExampleTest">
                 <methods>
                     <include name="verifyMessage"/>
                 </methods>

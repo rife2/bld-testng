@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
  * @since 1.0
  */
 @SuppressWarnings("unused")
-class TestNgExampleTests {
+class TestNgExampleTest {
 
     private final TestNgExample example = new TestNgExample();
 
