@@ -38,7 +38,12 @@
 
 ```console
 ./bld compile test -excludegroups=foo,bar
+```
 
+## Compile and run specific test suite
+
+```console
+./bld compile test -suites=sample-testng.xml
 ```
 
 ## Compile and run tests with specific verbosity

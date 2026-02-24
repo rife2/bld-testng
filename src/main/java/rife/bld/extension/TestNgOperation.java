@@ -125,7 +125,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                 } else {
                     String prefix;
                     Collection<String> targetCollection;
-                    if (arg.startsWith("-testclass=")) {
+                    if (arg.startsWith("-suites=")) {
+                        prefix = "-suites=";
+                        targetCollection = suites_;
+                    } else if (arg.startsWith("-testclass=")) {
                         prefix = "-testclass=";
                         targetCollection = testClasses_;
                     } else if (arg.startsWith("-testnames")) {
