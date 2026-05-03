@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import rife.bld.Project;
@@ -30,7 +31,10 @@ import rife.bld.operations.exceptions.ExitStatusException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -63,6 +67,124 @@ class TestNgOperationTest {
     }
 
     @Nested
+    @DisplayName("Argument Parsing Tests")
+    class ArgumentParsingTests {
+
+        @Test
+        void targetCollectionForArgExcludeGroups() {
+            var args = new ArrayList<>(List.of("-excludegroups=unit,integration"));
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return args;
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            assertThat(op.excludeGroups()).containsExactlyInAnyOrder("unit", "integration");
+        }
+
+        @Test
+        void targetCollectionForArgGroups() {
+            var args = new ArrayList<>(List.of("-groups=unit,integration"));
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return args;
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            assertThat(op.groups()).containsExactlyInAnyOrder("unit", "integration");
+        }
+
+        @Test
+        void targetCollectionForArgLogLevelParsed() {
+            var args = new ArrayList<>(List.of("-log=5"));
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return args;
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            assertThat(op.options().get("-log")).isEqualTo("5");
+            assertThat(args).isEmpty();
+        }
+
+        @Test
+        void targetCollectionForArgMethods() {
+            var args = new ArrayList<>(List.of("-methods=com.foo.Test.m1,com.foo.Test.m2"));
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return args;
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            assertThat(op.methods()).containsExactlyInAnyOrder("com.foo.Test.m1", "com.foo.Test.m2");
+        }
+
+        @Test
+        void targetCollectionForArgSuites() {
+            var args = new ArrayList<>(List.of("-suites=suite1.xml,suite2.xml"));
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return args;
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            assertThat(op.suites()).containsExactlyInAnyOrder("suite1.xml", "suite2.xml");
+        }
+
+        @Test
+        void targetCollectionForArgTestClass() {
+            var args = new ArrayList<>(List.of("-testclass=com.foo.Test1,com.foo.Test2"));
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return args;
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            assertThat(op.testClasses()).containsExactlyInAnyOrder("com.foo.Test1", "com.foo.Test2");
+        }
+
+        @Test
+        void targetCollectionForArgTestNames() {
+            var args = new ArrayList<>(List.of("-testnames=foo,bar"));
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return args;
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            assertThat(op.testNames()).containsExactlyInAnyOrder("foo", "bar");
+        }
+
+        @Test
+        void targetCollectionForArgUnknownBreaksLoop() {
+            var args = new ArrayList<>(List.of("-unknown=value", "-groups=should-not-parse"));
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return args;
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            assertThat(op.groups()).isEmpty(); // loop broke before -groups
+        }
+    }
+
+    @Nested
     @DisplayName("Directory Tests")
     class DirectoryTests {
 
@@ -90,6 +212,54 @@ class TestNgOperationTest {
     @Nested
     @DisplayName("Execute Tests")
     class ExecuteTests {
+
+        @Test
+        void execute() {
+            var pkg = "com.example";
+            var op = new TestNgOperation()
+                    .fromProject(new BaseProjectBlueprint(
+                            new File("examples/example-project"),
+                            pkg,
+                            "examples",
+                            "Examples"))
+                    .packages(pkg);
+            assertThatCode(op::execute).doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisabledOnOs(OS.WINDOWS)
+        void executeWithDefaultSuiteFailsOnIOException() throws IOException {
+            var readOnlyDir = Files.createTempDirectory("readonly");
+            if (readOnlyDir.toFile().setReadOnly()) {
+                var project = new Project() {
+                    @Override
+                    public File buildDirectory() {
+                        return readOnlyDir.toFile();
+                    }
+                };
+
+                var op = new TestNgOperation().fromProject(project); // no suites/packages/methods
+
+                assertThatThrownBy(op::executeConstructProcessCommandList)
+                        .isInstanceOf(RuntimeException.class)
+                        .hasCauseInstanceOf(IOException.class);
+
+                var ignored = readOnlyDir.toFile().setWritable(true); // cleanup
+                Files.deleteIfExists(readOnlyDir);
+            }
+        }
+
+        @Test
+        void executeWithInvalidLogLevel() {
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return List.of("-log=abc");
+                }
+            };
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            assertThatThrownBy(op::executeConstructProcessCommandList).isInstanceOf(IllegalArgumentException.class);
+        }
 
         @Test
         void executeWithInvalidSuite() {
@@ -214,6 +384,43 @@ class TestNgOperationTest {
                     .as("with run classpath")
                     .doesNotThrowAnyException();
         }
+
+        @Test
+        void executeWithUnknownArgBreaks() {
+            var project = new Project() {
+                @Override
+                public List<String> arguments() {
+                    return List.of("-unknown=value", "-suites=foo.xml");
+                }
+            };
+            var op = new TestNgOperation().fromProject(project);
+            var args = op.executeConstructProcessCommandList();
+            assertThat(args).doesNotContain("-suites=foo.xml");
+        }
+
+        @Test
+        void executeWithoutProject() {
+            var op = new TestNgOperation();
+            assertThatThrownBy(op::execute)
+                    .isInstanceOf(ExitStatusException.class);
+        }
+
+        @Test
+        void executeWithoutTests() {
+            var op = new TestNgOperation().fromProject(new Project());
+            assertThatThrownBy(op::execute)
+                    .isInstanceOf(ExitStatusException.class);
+        }
+
+        @Test
+        void writeDefaultSuiteGeneratesFile() throws IOException {
+            var project = new Project();
+            var op = new TestNgOperation().fromProject(project).packages("com.example");
+            op.executeConstructProcessCommandList();
+            var generated = Path.of(project.buildDirectory().getAbsolutePath(), "testng-generated.xml");
+            assertThat(generated).exists();
+            assertThat(Files.readString(generated)).contains("<suite", "com.example");
+        }
     }
 
     @Nested
@@ -236,75 +443,75 @@ class TestNgOperationTest {
         @EnabledOnOs(OS.LINUX)
         void checkAllParameters() throws IOException {
             var args = Files.readAllLines(Paths.get("src", "test", "resources", "testng-args.txt"));
-
             assertThat(args).isNotEmpty();
 
             var params = new TestNgOperation()
                     .fromProject(new BaseProjectBlueprint(new File("examples"), "com.example", "examples", "Examples"))
-                    .alwaysRunListeners(true)
-                    .dataProviderThreadCount(1)
-                    .dependencyInjectorFactory("injectorfactory")
-                    .directory("dir")
-                    .excludeGroups("group")
-                    .failWhenEverythingSkipped(true)
-                    .failurePolicy(TestNgOperation.FailurePolicy.SKIP)
-                    .generateResultsPerSuite(true)
-                    .groups("group1", "group2")
-                    .ignoreMissedTestName(true)
-                    .includeAllDataDrivenTestsWhenSkipping(true)
-                    .listener("listener")
-                    .listenerComparator("comparator")
-                    .listenerFactory("factory")
-                    .log(1)
-                    .methodSelectors("selector")
-                    .methods("methods")
-                    .mixed(true)
-                    .objectFactory("objectFactory")
-                    .overrideIncludedMethods("method")
-                    .parallel(TestNgOperation.Parallel.TESTS)
-                    .propagateDataProviderFailureAsTestFailure(true)
-                    .reporter("reporter")
-                    .shareThreadPoolForDataProviders(true)
-                    .spiListenersToSkip("listenter")
-                    .suiteName("name")
-                    .suiteThreadPoolSize(1)
-                    .testClass("class")
-                    .testJar("jar")
-                    .testName("name")
-                    .testNames("names")
-                    .testRunFactory("runFactory")
-                    .threadCount(1)
-                    .threadPoolFactoryClass("poolClass")
-                    .useDefaultListeners(true)
-                    .useGlobalThreadPool(true)
-                    .xmlPathInJar("jarPath")
+                    .alwaysRunListeners(true) // -alwaysrunlisteners
+                    .failurePolicy(TestNgOperation.FailurePolicy.SKIP) // -configfailurepolicy
+                    .directory("dir") // -d
+                    .dataProviderThreadCount(1) // -dataproviderthreadcount
+                    .dependencyInjectorFactory("injectorfactory") // -dependencyinjectorfactory
+                    .excludeGroups("group") // -excludegroups
+                    .failWhenEverythingSkipped(true) // -failwheneverythingskipped
+                    .generateResultsPerSuite(true) // -generateResultsPerSuite
+                    .groups("group1", "group2") // -groups
+                    .ignoreMissedTestName(true) // -ignoreMissedTestNames
+                    .includeAllDataDrivenTestsWhenSkipping(true) // -includeAllDataDrivenTestsWhenSkipping
+                    .jUnit(true) // -junit
+                    .listener("listener") // -listener
+                    .listenerComparator("comparator") // -listenercomparator
+                    .listenerFactory("factory") // -listenerfactory
+                    .log(1) // -log
+                    .methods("methods") // -methods
+                    .methodSelectors("selector") // -methodselectors
+                    .mixed(true) // -mixed
+                    .objectFactory("objectFactory") // -objectfactory
+                    .overrideIncludedMethods("method") // -overrideincludedmethods
+                    .parallel(TestNgOperation.Parallel.TESTS) // -parallel
+                    .propagateDataProviderFailureAsTestFailure(true) // -propagateDataProviderFailureAsTestFailure
+                    .reporter("reporter") // -reporter
+                    .shareThreadPoolForDataProviders(true) // -shareThreadPoolForDataProviders
+                    .sourceDir("src/test") // -sourcedir
+                    .spiListenersToSkip("listener") // -spilistenerstoskip
+                    .suiteName("name") // -suitename
+                    .suiteThreadPoolSize(1) // -suitethreadpoolsize
+                    .testClass("class") // -testclass
+                    .testJar("jar") // -testjar
+                    .testName("name") // -testname
+                    .testNames("names") // -testnames
+                    .testRunFactory("runFactory") // -testrunfactory
+                    .threadCount(1) // -threadcount
+                    .threadPoolFactoryClass("poolClass") // -threadpoolfactoryclass
+                    .useDefaultListeners(true) // -usedefaultlisteners
+                    .useGlobalThreadPool(true) // -useGlobalThreadPool
+                    .xmlPathInJar("jarPath") // -xmlpathinjar
                     .executeConstructProcessCommandList();
 
             try (var softly = new AutoCloseableSoftAssertions()) {
                 for (var p : args) {
-                    var found = false;
-                    for (var a : params) {
-                        if (a.startsWith(p)) {
-                            found = true;
-                            break;
-                        }
-                    }
+                    var found = params.stream().anyMatch(a -> a.equals(p) || a.startsWith(p + " "));
                     softly.assertThat(found).as("%s not found.", p).isTrue();
                 }
             }
-
         }
 
         @Test
         void classpath() {
             var op = new TestNgOperation().testClasspath(FOO, BAR);
-            assertThat(op.testClasspath()).containsExactly(BAR, FOO);
+            assertThat(op.testClasspath()).containsExactlyInAnyOrder(BAR, FOO);
         }
 
         @Test
         void dataProviderThreadCount() {
             var op = new TestNgOperation().dataProviderThreadCount(1);
             assertThat(op.options().get("-dataproviderthreadcount")).isEqualTo("1");
+        }
+
+        @Test
+        void dataProviderThreadCountInvalid() {
+            assertThatThrownBy(() -> new TestNgOperation().dataProviderThreadCount(-1))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -316,13 +523,19 @@ class TestNgOperationTest {
         @Test
         void excludeGroups() {
             var op = new TestNgOperation().excludeGroups(FOO, BAR, FOO);
-            assertThat(op.excludeGroups()).containsExactly(BAR, FOO);
+            assertThat(op.excludeGroups()).containsExactlyInAnyOrder(BAR, FOO);
         }
 
         @Test
         void excludeGroupsAsList() {
-            var op = new TestNgOperation().excludeGroups(List.of(FOO, "", BAR));
-            assertThat(op.excludeGroups()).containsExactly(BAR, FOO);
+            var op = new TestNgOperation().excludeGroups(List.of(FOO, BAR));
+            assertThat(op.excludeGroups()).containsExactlyInAnyOrder(BAR, FOO);
+        }
+
+        @Test
+        void excludeGroupsRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().excludeGroups(List.of("")))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -350,6 +563,15 @@ class TestNgOperationTest {
         }
 
         @Test
+        void fromProjectRespectsExistingDirectory() {
+            var custom = new File("custom-out");
+            var op = new TestNgOperation()
+                    .directory(custom)
+                    .fromProject(new Project());
+            assertThat(op.options().get("-d")).isEqualTo(custom.getAbsolutePath());
+        }
+
+        @Test
         void generateResultsPerSuiteFalse() {
             var op = new TestNgOperation().generateResultsPerSuite(false);
             assertThat(op.options().get("-generateResultsPerSuite")).isEqualTo("false");
@@ -364,13 +586,19 @@ class TestNgOperationTest {
         @Test
         void groups() {
             var op = new TestNgOperation().groups(FOO, BAR, FOO);
-            assertThat(op.groups()).containsExactly(BAR, FOO);
+            assertThat(op.groups()).containsExactlyInAnyOrder(BAR, FOO);
         }
 
         @Test
         void groupsAsList() {
-            var op = new TestNgOperation().groups(List.of(FOO, BAR, ""));
+            var op = new TestNgOperation().groups(List.of(FOO, BAR));
             assertThat(op.groups()).hasSize(2).contains(FOO, BAR);
+        }
+
+        @Test
+        void groupsRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().groups(List.of("")))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -428,9 +656,21 @@ class TestNgOperationTest {
         }
 
         @Test
+        void listenerRejectsNullElements() {
+            assertThatThrownBy(() -> new TestNgOperation().listener(Arrays.asList("foo", null)))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
         void log() {
             var op = new TestNgOperation().log(1);
             assertThat(op.options().get("-log")).isEqualTo("1");
+        }
+
+        @Test
+        void logInvalid() {
+            assertThatThrownBy(() -> new TestNgOperation().log(-1))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -448,13 +688,19 @@ class TestNgOperationTest {
         @Test
         void methods() {
             var op = new TestNgOperation().methods(FOO, BAR, FOO);
-            assertThat(op.methods()).containsExactly(BAR, FOO);
+            assertThat(op.methods()).containsExactlyInAnyOrder(BAR, FOO);
         }
 
         @Test
         void methodsAsList() {
-            var op = new TestNgOperation().methods(List.of(FOO, BAR, BAR, ""));
-            assertThat(op.methods()).containsExactly(BAR, FOO);
+            var op = new TestNgOperation().methods(List.of(FOO, BAR, BAR));
+            assertThat(op.methods()).containsExactlyInAnyOrder(BAR, FOO);
+        }
+
+        @Test
+        void methodsRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().methods(List.of()))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -512,6 +758,12 @@ class TestNgOperationTest {
         }
 
         @Test
+        void packagesRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().packages(List.of("")))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
         void parallelClasses() {
             var op = new TestNgOperation().parallel(TestNgOperation.Parallel.CLASSES);
             assertThat(op.options().get("-parallel")).isEqualTo("classes");
@@ -527,12 +779,6 @@ class TestNgOperationTest {
         void parallelTests() {
             var op = new TestNgOperation().parallel(TestNgOperation.Parallel.TESTS);
             assertThat(op.options().get("-parallel")).isEqualTo("tests");
-        }
-
-        @Test
-        void port() {
-            var op = new TestNgOperation().port(1);
-            assertThat(op.options().get("-port")).isEqualTo("1");
         }
 
         @Test
@@ -560,9 +806,15 @@ class TestNgOperationTest {
         }
 
         @Test
+        void shareThreadPoolForDataProviders() {
+            var op = new TestNgOperation();
+            assertThat(op.options().get("-shareThreadPoolForDataProviders")).isNull();
+        }
+
+        @Test
         void shareThreadPoolForDataProvidersFalse() {
             var op = new TestNgOperation().shareThreadPoolForDataProviders(false);
-            assertThat(op.options().get("-shareThreadPoolForDataProviders")).isNull();
+            assertThat(op.options().get("-shareThreadPoolForDataProviders")).isEqualTo("false");
         }
 
         @Test
@@ -584,21 +836,51 @@ class TestNgOperationTest {
         }
 
         @Test
+        void suiteNameRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().suiteName(""))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void testClassRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().testClass(List.of()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void testClasspathRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().testClasspath(List.of()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
         void testNames() {
             var ops = new TestNgOperation().testNames(FOO, BAR);
-            assertThat(ops.testNames()).containsExactly(BAR, FOO);
+            assertThat(ops.testNames()).containsExactlyInAnyOrder(BAR, FOO);
         }
 
         @Test
         void testNamesAsList() {
             var ops = new TestNgOperation().testNames(List.of(FOO, BAR));
-            assertThat(ops.testNames()).containsExactly(BAR, FOO);
+            assertThat(ops.testNames()).containsExactlyInAnyOrder(BAR, FOO);
+        }
+
+        @Test
+        void testNamesRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().testNames(List.of()))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         void threadCount() {
             var op = new TestNgOperation().threadCount(1);
             assertThat(op.options().get("-threadcount")).isEqualTo("1");
+        }
+
+        @Test
+        void threadCountInvalid() {
+            assertThatThrownBy(() -> new TestNgOperation().threadCount(-1))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -620,9 +902,15 @@ class TestNgOperationTest {
         }
 
         @Test
+        void useGlobalThreadPool() {
+            var op = new TestNgOperation();
+            assertThat(op.options().get("-useGlobalThreadPool")).isNull();
+        }
+
+        @Test
         void useGlobalThreadPoolFalse() {
             var op = new TestNgOperation().useGlobalThreadPool(false);
-            assertThat(op.options().get("-useGlobalThreadPool")).isNull();
+            assertThat(op.options().get("-useGlobalThreadPool")).isEqualTo("false");
         }
 
         @Test
@@ -705,6 +993,20 @@ class TestNgOperationTest {
                 var op = new TestNgOperation().xmlPathInJar(FOO);
                 assertThat(op.options().get("-xmlpathinjar")).isEqualTo(FOO);
             }
+
+            @Test
+            @SuppressWarnings("DataFlowIssue")
+            void xmlPathInJarRejectsNullFile() {
+                assertThatThrownBy(() -> new TestNgOperation().xmlPathInJar((File) null))
+                        .isInstanceOf(NullPointerException.class);
+            }
+
+            @Test
+            @SuppressWarnings("DataFlowIssue")
+            void xmlPathInJarRejectsNullPath() {
+                assertThatThrownBy(() -> new TestNgOperation().xmlPathInJar((Path) null))
+                        .isInstanceOf(NullPointerException.class);
+            }
         }
     }
 
@@ -725,6 +1027,12 @@ class TestNgOperationTest {
         }
 
         @Test
+        void suiteThreadPoolSizeInvalid() {
+            assertThatThrownBy(() -> new TestNgOperation().suiteThreadPoolSize(-1))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
         void suites() {
             var op = new TestNgOperation().suites(FOO, BAR);
             assertThat(op.suites()).contains(FOO).contains(BAR);
@@ -734,6 +1042,12 @@ class TestNgOperationTest {
         void suitesAsList() {
             var op = new TestNgOperation().suites(List.of(FOO, BAR));
             assertThat(op.suites()).contains(FOO).contains(BAR);
+        }
+
+        @Test
+        void suitesRejectsEmpty() {
+            assertThatThrownBy(() -> new TestNgOperation().suites(List.of("")))
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 }

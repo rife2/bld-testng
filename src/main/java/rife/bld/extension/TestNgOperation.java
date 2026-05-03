@@ -16,39 +16,44 @@
 
 package rife.bld.extension;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import rife.bld.BaseProject;
 import rife.bld.extension.tools.ClasspathTools;
 import rife.bld.extension.tools.ObjectTools;
-import rife.bld.extension.tools.TextTools;
 import rife.bld.operations.TestOperation;
 import rife.bld.operations.exceptions.ExitStatusException;
 
+import javax.xml.stream.XMLOutputFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
- * Run tests with <a href="https;//testng.org/">TestNG</a>.
+ * Run tests with <a href="https://testng.org/">TestNG</a>.
  *
  * @author <a href="https://erik.thauvin.net/">Erik C. Thauvin</a>
  * @since 1.0
  */
+@SuppressFBWarnings(
+        value = "EI_EXPOSE_REP",
+        justification = "Builder pattern intentionally exposes mutable collections"
+)
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestNgOperation extends TestOperation<TestNgOperation, List<String>> {
 
-    private static final Logger LOGGER = Logger.getLogger(TestNgOperation.class.getName());
     private static final String LOG_ARG = "-log";
+    private static final XMLOutputFactory XML_FACTORY = XMLOutputFactory.newInstance();
+    private static final Logger logger = Logger.getLogger(TestNgOperation.class.getName());
     private final Set<String> excludeGroups_ = new HashSet<>();
     private final Set<String> groups_ = new HashSet<>();
     private final Set<String> methods_ = new HashSet<>();
-    private final Map<String, String> options_ = new ConcurrentHashMap<>();
+    private final Map<String, String> options_ = new LinkedHashMap<>();
     private final Set<String> packages_ = new HashSet<>();
     private final Set<String> suites_ = new HashSet<>();
     private final Set<String> testClasses_ = new HashSet<>();
@@ -59,13 +64,13 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     @Override
     public void execute() throws IOException, InterruptedException, ExitStatusException {
         if (project_ == null) {
-            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
-                LOGGER.severe("A project must be specified.");
+            if (!silent() && logger.isLoggable(Level.SEVERE)) {
+                logger.severe("A project must be specified.");
             }
             throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
         } else if (packages_.isEmpty() && suites_.isEmpty() && methods_.isEmpty()) {
-            if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
-                LOGGER.severe("At least an XML suite, package or method is required.");
+            if (!silent() && logger.isLoggable(Level.SEVERE)) {
+                logger.severe("At least an XML suite, package or method is required.");
             }
             throw new ExitStatusException(ExitStatusException.EXIT_FAILURE);
         } else {
@@ -105,7 +110,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                                 project_.buildTestDirectory().getAbsolutePath())
                 );
             } else {
-                args.add(String.join(File.pathSeparator, filterBlanks(testClasspath_)));
+                args.add(String.join(File.pathSeparator, testClasspath_));
             }
 
             args.add("org.testng.TestNG");
@@ -118,56 +123,38 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                     try {
                         verbose(Integer.parseInt(level));
                     } catch (NumberFormatException nfe) {
-                        if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
-                            LOGGER.warning("Invalid value for log level: " + level);
-                        }
+                        throw new IllegalArgumentException("Invalid log level: " + level, nfe);
                     }
                 } else {
-                    String prefix;
-                    Collection<String> targetCollection;
-                    if (arg.startsWith("-suites=")) {
-                        prefix = "-suites=";
-                        targetCollection = suites_;
-                    } else if (arg.startsWith("-testclass=")) {
-                        prefix = "-testclass=";
-                        targetCollection = testClasses_;
-                    } else if (arg.startsWith("-testnames")) {
-                        prefix = "-testnames=";
-                        targetCollection = testNames_;
-                    } else if (arg.startsWith("-methods=")) {
-                        prefix = "-methods=";
-                        targetCollection = methods_;
-                    } else if (arg.startsWith("-groups=")) {
-                        prefix = "-groups=";
-                        targetCollection = groups_;
-                    } else if (arg.startsWith("-excludegroups=")) {
-                        prefix = "-excludegroups=";
-                        targetCollection = excludeGroups_;
-                    } else {
-                        break;
+                    var target = targetCollectionForArg(arg);
+                    if (target.isEmpty()) {
+                        break; // unknown flag, stop parsing
                     }
 
-                    var value = arg.substring(prefix.length());
-                    targetCollection.addAll(Arrays.asList(value.split(",")));
+                    var prefixEnd = arg.indexOf('=') + 1;
+                    var value = arg.substring(prefixEnd);
+                    target.get().addAll(Arrays.asList(value.split(",")));
                 }
                 project_.arguments().remove(0);
             }
 
             options_.forEach((k, v) -> {
                 args.add(k);
-                args.add(v);
+                if (!v.isEmpty()) {
+                    args.add(v);
+                }
             });
+
             boolean hasClasses = ObjectTools.isNotEmpty(testClasses_);
             boolean hasMethods = ObjectTools.isNotEmpty(methods_);
-
             if (ObjectTools.isNotEmpty(suites_)) {
                 args.addAll(suites_);
             } else if (!hasClasses && !hasMethods) {
                 try {
-                    args.add(writeDefaultSuite().getAbsolutePath());
+                    args.add(writeDefaultSuite().toString());
                 } catch (IOException ioe) {
-                    if (LOGGER.isLoggable(Level.SEVERE) && !silent()) {
-                        LOGGER.severe("An IO error occurred while accessing the default testng.xml file: "
+                    if (!silent() && logger.isLoggable(Level.SEVERE)) {
+                        logger.severe("An IO error occurred while accessing the default testng.xml file: "
                                 + ioe.getMessage());
                     }
                     throw new RuntimeException(ioe);
@@ -199,12 +186,12 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
                 args.add(String.join(",", excludeGroups_));
             }
 
-            if (LOGGER.isLoggable(Level.FINE) && !silent()) {
-                LOGGER.fine(String.join(" ", args));
+            if (!silent() && logger.isLoggable(Level.FINE)) {
+                logger.fine(String.join(" ", args));
             }
 
-            if (LOGGER.isLoggable(Level.INFO) && !silent()) {
-                LOGGER.info(String.format("Report will be saved in file://%s",
+            if (!silent() && logger.isLoggable(Level.INFO)) {
+                logger.info(String.format("Report will be saved in file://%s",
                         new File(options_.get("-d")).toURI().getPath()));
             }
         }
@@ -212,18 +199,21 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
         return args;
     }
 
-
     /**
      * Configures the {@link BaseProject}.
+     * <p>
+     * Sets the {@link #directory(File) report directory} to the project
+     * {@link rife.bld.BaseProject#buildDirectory() build directory} if not already set.
      *
      * @param project the project
      * @return this operation instance
      */
     @Override
-    @SuppressFBWarnings("EI_EXPOSE_REP2")
-    public TestNgOperation fromProject(BaseProject project) {
-        project_ = project;
-        directory(new File(project.buildDirectory(), "test-output"));
+    public TestNgOperation fromProject(@NonNull BaseProject project) {
+        project_ = Objects.requireNonNull(project, "The project must not be null");
+        if (!options_.containsKey("-d")) {
+            directory(new File(project.buildDirectory(), "test-output"));
+        }
         return this;
     }
 
@@ -235,9 +225,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param isAlwaysRunListeners {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation alwaysRunListeners(Boolean isAlwaysRunListeners) {
-        options_.put("-alwaysrunlisteners", String.valueOf(isAlwaysRunListeners));
-        return this;
+    public TestNgOperation alwaysRunListeners(boolean isAlwaysRunListeners) {
+        return optBool("-alwaysrunlisteners", isAlwaysRunListeners);
     }
 
     /**
@@ -250,9 +239,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation dataProviderThreadCount(int count) {
-        if (count >= 0) {
-            options_.put("-dataproviderthreadcount", String.valueOf(count));
+        if (count < 0) {
+            throw new IllegalArgumentException("'dataProviderThreadCount' count must be >= 0");
         }
+        options_.put("-dataproviderthreadcount", String.valueOf(count));
         return this;
     }
 
@@ -262,9 +252,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param injectorFactory the injector factory
      * @return this operation instance
      */
-    public TestNgOperation dependencyInjectorFactory(String injectorFactory) {
-        addOption("-dependencyinjectorfactory", injectorFactory);
-        return this;
+    public TestNgOperation dependencyInjectorFactory(@NonNull String injectorFactory) {
+        return opt("-dependencyinjectorfactory", injectorFactory);
     }
 
     /**
@@ -275,9 +264,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param directoryPath the directory path
      * @return this operation instance
      */
-    public TestNgOperation directory(String directoryPath) {
-        addOption("-d", directoryPath);
-        return this;
+    public TestNgOperation directory(@NonNull String directoryPath) {
+        return opt("-d", directoryPath);
     }
 
     /**
@@ -288,7 +276,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param directoryPath the directory path
      * @return this operation instance
      */
-    public TestNgOperation directory(File directoryPath) {
+    public TestNgOperation directory(@NonNull File directoryPath) {
         return directory(directoryPath.getAbsolutePath());
     }
 
@@ -300,7 +288,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param directoryPath the directory path
      * @return this operation instance
      */
-    public TestNgOperation directory(Path directoryPath) {
+    public TestNgOperation directory(@NonNull Path directoryPath) {
         return directory(directoryPath.toFile());
     }
 
@@ -309,7 +297,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of groups
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> excludeGroups() {
         return excludeGroups_;
     }
@@ -317,28 +304,26 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     /**
      * The list of groups you want to be excluded from this run.
      *
-     * @param group one or more groups
+     * @param groups one or more groups
      * @return this operation instance
      * @see #excludeGroups(Collection) #excludeGroups(Collection)
      */
-    public TestNgOperation excludeGroups(String... group) {
-        if (ObjectTools.isNotEmpty(group)) {
-            return excludeGroups(List.of(group));
-        }
-        return this;
+    public TestNgOperation excludeGroups(@NonNull String... groups) {
+        Objects.requireNonNull(groups, "'excludeGroups' must not be null");
+        return excludeGroups(List.of(groups));
     }
 
     /**
      * The list of groups you want to be excluded from this run.
      *
-     * @param group the list of groups
+     * @param groups the list of groups
      * @return this operation instance
      * @see #excludeGroups(String...) #excludeGroups(String...)
      */
-    public TestNgOperation excludeGroups(Collection<String> group) {
-        if (ObjectTools.isNotEmpty(group)) {
-            excludeGroups_.addAll(filterBlanks(group));
-        }
+    public TestNgOperation excludeGroups(@NonNull Collection<String> groups) {
+        ObjectTools.requireAllNotEmpty(groups, "'excludeGroups' and its elements must not be null or empty");
+        excludeGroups_.clear();
+        excludeGroups_.addAll(groups);
         return this;
     }
 
@@ -348,9 +333,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param isFailAllSkipped {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation failWhenEverythingSkipped(Boolean isFailAllSkipped) {
-        options_.put("-failwheneverythingskipped", String.valueOf(isFailAllSkipped));
-        return this;
+    public TestNgOperation failWhenEverythingSkipped(boolean isFailAllSkipped) {
+        return optBool("-failwheneverythingskipped", isFailAllSkipped);
     }
 
     /**
@@ -360,10 +344,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param policy the policy
      * @return this operation instance
      */
-    public TestNgOperation failurePolicy(FailurePolicy policy) {
-        if (policy != null) {
-            options_.put("-configfailurepolicy", policy.name().toLowerCase());
-        }
+    public TestNgOperation failurePolicy(@NonNull FailurePolicy policy) {
+        Objects.requireNonNull(policy, "'failurePolicy' must not be null");
+        options_.put("-configfailurepolicy", policy.asArgument());
         return this;
     }
 
@@ -376,9 +359,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param resultsPerSuite {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation generateResultsPerSuite(Boolean resultsPerSuite) {
-        options_.put("-generateResultsPerSuite", String.valueOf(resultsPerSuite));
-        return this;
+    public TestNgOperation generateResultsPerSuite(boolean resultsPerSuite) {
+        return optBool("-generateResultsPerSuite", resultsPerSuite);
     }
 
     /**
@@ -386,7 +368,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of groups
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> groups() {
         return groups_;
     }
@@ -396,15 +377,13 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * <p>For example: {@code "windows", "linux", "regression}</p>
      *
-     * @param group one or more groups
+     * @param groups one or more groups
      * @return this operation instance
      * @see #groups(Collection) #groups(Collection)
      */
-    public TestNgOperation groups(String... group) {
-        if (ObjectTools.isNotEmpty(group)) {
-            return groups(List.of(group));
-        }
-        return this;
+    public TestNgOperation groups(@NonNull String... groups) {
+        ObjectTools.requireAllNotEmpty(groups, "'groups' and its elements must not be null or empty");
+        return groups(List.of(groups));
     }
 
     /**
@@ -412,14 +391,14 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * <p>For example: {@code "windows", "linux", "regression}</p>
      *
-     * @param group the list of groups
+     * @param groups the list of groups
      * @return this operation instance
-     * @see #groups(String...) #groups(String...)
+     * @see #groups(String...)
      */
-    public TestNgOperation groups(Collection<String> group) {
-        if (ObjectTools.isNotEmpty(group)) {
-            groups_.addAll(filterBlanks(group));
-        }
+    public TestNgOperation groups(@NonNull Collection<String> groups) {
+        ObjectTools.requireAllNotEmpty(groups, "'groups' and its elements must not be null or empty");
+        groups_.clear();
+        groups_.addAll(groups);
         return this;
     }
 
@@ -432,9 +411,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param isIgnoreMissedTestNames {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation ignoreMissedTestName(Boolean isIgnoreMissedTestNames) {
-        options_.put("-ignoreMissedTestNames", String.valueOf(isIgnoreMissedTestNames));
-        return this;
+    public TestNgOperation ignoreMissedTestName(boolean isIgnoreMissedTestNames) {
+        return optBool("-ignoreMissedTestNames", isIgnoreMissedTestNames);
     }
 
     /**
@@ -445,9 +423,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param isIncludeDrivenTestsWhenSkipping {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation includeAllDataDrivenTestsWhenSkipping(Boolean isIncludeDrivenTestsWhenSkipping) {
-        options_.put("-includeAllDataDrivenTestsWhenSkipping", String.valueOf(isIncludeDrivenTestsWhenSkipping));
-        return this;
+    public TestNgOperation includeAllDataDrivenTestsWhenSkipping(boolean isIncludeDrivenTestsWhenSkipping) {
+        return optBool("-includeAllDataDrivenTestsWhenSkipping", isIncludeDrivenTestsWhenSkipping);
     }
 
     /**
@@ -458,39 +435,33 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param isJunit {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation jUnit(Boolean isJunit) {
-        options_.put("-junit", String.valueOf(isJunit));
-        return this;
+    public TestNgOperation jUnit(boolean isJunit) {
+        return optBool("-junit", isJunit);
     }
 
     /**
      * The list of {@code .class} files or list of class names implementing {@code ITestListener} or
      * {@code ISuiteListener}
      *
-     * @param listener one or more listeners
+     * @param listeners one or more listeners
      * @return this operation instance
-     * @see #listener(Collection) #listener(Collection)
+     * @see #listener(Collection)
      */
-    public TestNgOperation listener(String... listener) {
-        if (ObjectTools.isNotEmpty(listener)) {
-            return listener(List.of(listener));
-        }
-        return this;
+    public TestNgOperation listener(@NonNull String... listeners) {
+        Objects.requireNonNull(listeners, "'listener' must not be null");
+        return listener(List.of(listeners));
     }
 
     /**
      * The list of {@code .class} files or list of class names implementing {@code ITestListener} or
      * {@code ISuiteListener}
      *
-     * @param listener the list of listeners
+     * @param listeners the list of listeners
      * @return this operation instance
-     * @see #listener(String...) #listener(String...)
+     * @see #listener(String...)
      */
-    public TestNgOperation listener(Collection<String> listener) {
-        if (ObjectTools.isNotEmpty(listener)) {
-            options_.put("-listener", String.join(",", filterBlanks(listener)));
-        }
-        return this;
+    public TestNgOperation listener(@NonNull Collection<String> listeners) {
+        return optJoin("-listener", listeners);
     }
 
     /**
@@ -500,9 +471,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param listenerComparator the listener comparator
      * @return this operation instance
      */
-    public TestNgOperation listenerComparator(String listenerComparator) {
-        options_.put("-listenercomparator", listenerComparator);
-        return this;
+    public TestNgOperation listenerComparator(@NonNull String listenerComparator) {
+        return opt("-listenercomparator", listenerComparator);
     }
 
     /**
@@ -511,9 +481,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param listenerFactory the listener factory
      * @return this operation instance
      */
-    public TestNgOperation listenerFactory(String listenerFactory) {
-        options_.put("-listenerfactory", listenerFactory);
-        return this;
+    public TestNgOperation listenerFactory(@NonNull String listenerFactory) {
+        return opt("-listenerfactory", listenerFactory);
     }
 
     /**
@@ -524,11 +493,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @see #verbose(int) #verbose(int)
      */
     public TestNgOperation log(int level) {
-        if (level >= 0) {
-            options_.put(LOG_ARG, String.valueOf(level));
-        } else if (LOGGER.isLoggable(Level.WARNING) && !silent()) {
-            LOGGER.warning("Log level must be >= 0");
+        if (level < 0) {
+            throw new IllegalArgumentException("Log level must be >= 0");
         }
+        options_.put(LOG_ARG, String.valueOf(level));
         return this;
     }
 
@@ -541,11 +509,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      * @see #methodSelectors(Collection) #methodSelectors(Collection)
      */
-    public TestNgOperation methodSelectors(String... selector) {
-        if (ObjectTools.isNotEmpty(selector)) {
-            return methodSelectors(List.of(selector));
-        }
-        return this;
+    public TestNgOperation methodSelectors(@NonNull String... selector) {
+        Objects.requireNonNull(selector, "'methodSelectors' must not be null");
+        return methodSelectors(List.of(selector));
     }
 
     /**
@@ -557,11 +523,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      * @see #methodSelectors(String...) #methodSelectors(String...)
      */
-    public TestNgOperation methodSelectors(Collection<String> selector) {
-        if (ObjectTools.isNotEmpty(selector)) {
-            options_.put("-methodselectors", String.join(",", filterBlanks(selector)));
-        }
-        return this;
+    public TestNgOperation methodSelectors(@NonNull Collection<String> selector) {
+        return optJoin("-methodselectors", selector);
     }
 
     /**
@@ -573,11 +536,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      * @see #methods(Collection) #methods(Collection)
      */
-    public TestNgOperation methods(String... method) {
-        if (ObjectTools.isNotEmpty(method)) {
-            return methods(List.of(method));
-        }
-        return this;
+    public TestNgOperation methods(@NonNull String... method) {
+        Objects.requireNonNull(method, "'methods' must not be null");
+        return methods(List.of(method));
     }
 
     /**
@@ -589,10 +550,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      * @see #methods(String...) #methods(String...)
      */
-    public TestNgOperation methods(Collection<String> method) {
-        if (ObjectTools.isNotEmpty(method)) {
-            methods_.addAll(filterBlanks(method));
-        }
+    public TestNgOperation methods(@NonNull Collection<String> method) {
+        ObjectTools.requireAllNotEmpty(method, "'methods' must not be empty or null");
+        methods_.clear();
+        methods_.addAll(method);
         return this;
     }
 
@@ -601,7 +562,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of methods
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> methods() {
         return methods_;
     }
@@ -614,9 +574,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param isMixed {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation mixed(Boolean isMixed) {
-        options_.put("-mixed", String.valueOf(isMixed));
-        return this;
+    public TestNgOperation mixed(boolean isMixed) {
+        return optBool("-mixed", isMixed);
     }
 
     /**
@@ -625,15 +584,13 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * A fully qualified class name that implements {@code org.testng.ITestObjectFactory} which can be used to create
      * test class and listener instances.
      *
-     * @param factory one or more factory
+     * @param factories one or more factory
      * @return this operation instance
-     * @see #objectFactory(Collection) #objectFactory(Collection)
+     * @see #objectFactory(Collection)
      */
-    public TestNgOperation objectFactory(String... factory) {
-        if (ObjectTools.isNotEmpty(factory)) {
-            return objectFactory(List.of(factory));
-        }
-        return this;
+    public TestNgOperation objectFactory(@NonNull String... factories) {
+        Objects.requireNonNull(factories, "'objectFactory' must not be null");
+        return objectFactory(List.of(factories));
     }
 
     /**
@@ -642,15 +599,12 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * A fully qualified class name that implements {@code org.testng.ITestObjectFactory} which can be used to create
      * test class and listener instances.
      *
-     * @param factory the list of factories
+     * @param factories the list of factories
      * @return this operation instance
-     * @see #objectFactory(String...) #objectFactory(String...)
+     * @see #objectFactory(String...)
      */
-    public TestNgOperation objectFactory(Collection<String> factory) {
-        if (ObjectTools.isNotEmpty(factory)) {
-            options_.put("-objectfactory", String.join(",", filterBlanks(factory)));
-        }
-        return this;
+    public TestNgOperation objectFactory(@NonNull Collection<String> factories) {
+        return optJoin("-objectfactory", factories);
     }
 
     /**
@@ -658,7 +612,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the map of run options
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Map<String, String> options() {
         return options_;
     }
@@ -667,30 +620,25 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * The list of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
      *
-     * @param method one or more methods
+     * @param methods one or more methods
      * @return this operation instance
-     * @see #overrideIncludedMethods(Collection) #overrideIncludedMethods(Collection)
+     * @see #overrideIncludedMethods(Collection)
      */
-    public TestNgOperation overrideIncludedMethods(String... method) {
-        if (ObjectTools.isNotEmpty(method)) {
-            return overrideIncludedMethods(List.of(method));
-        }
-        return this;
+    public TestNgOperation overrideIncludedMethods(@NonNull String... methods) {
+        Objects.requireNonNull(methods, "'overrideIncludedMethods' must not be null");
+        return overrideIncludedMethods(List.of(methods));
     }
 
     /**
      * The list of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
      *
-     * @param method the list of methods
+     * @param methods the list of methods
      * @return this operation instance
-     * @see #overrideIncludedMethods(String...) #overrideIncludedMethods(String...)
+     * @see #overrideIncludedMethods(String...)
      */
-    public TestNgOperation overrideIncludedMethods(Collection<String> method) {
-        if (ObjectTools.isNotEmpty(method)) {
-            options_.put("-overrideincludedmethods", String.join(",", filterBlanks(method)));
-        }
-        return this;
+    public TestNgOperation overrideIncludedMethods(@NonNull Collection<String> methods) {
+        return optJoin("-overrideincludedmethods", methods);
     }
 
     /**
@@ -700,15 +648,13 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * <p>For example: {@code "com.example", "test.sample.*"}</p>
      *
-     * @param name one or more names
+     * @param names one or more names
      * @return this operation instance
-     * @see #packages(Collection) #packages(Collection)
+     * @see #packages(Collection)
      */
-    public TestNgOperation packages(String... name) {
-        if (ObjectTools.isNotEmpty(name)) {
-            return packages(List.of(name));
-        }
-        return this;
+    public TestNgOperation packages(@NonNull String... names) {
+        Objects.requireNonNull(names, "'packages' must not be null");
+        return packages(List.of(names));
     }
 
     /**
@@ -718,14 +664,14 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * <p>For example: {@code "com.example", "test.sample.*"}</p>
      *
-     * @param name the list of names
+     * @param names the list of names
      * @return this operation instance
-     * @see #packages(String...) #packages(String...)
+     * @see #packages(String...)
      */
-    public TestNgOperation packages(Collection<String> name) {
-        if (ObjectTools.isNotEmpty(name)) {
-            packages_.addAll(filterBlanks(name));
-        }
+    public TestNgOperation packages(@NonNull Collection<String> names) {
+        ObjectTools.requireAllNotEmpty(names, "'packages' and its elements must not be null or empty");
+        packages_.clear();
+        packages_.addAll(names);
         return this;
     }
 
@@ -734,7 +680,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of packages
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> packages() {
         return packages_;
     }
@@ -748,23 +693,9 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      * @see Parallel
      */
-    public TestNgOperation parallel(Parallel mechanism) {
-        options_.put("-parallel", mechanism.name().toLowerCase());
-        return this;
-    }
-
-    /**
-     * private String suiteName;
-     * <p>
-     * Specifies the port number.
-     *
-     * @param port the port
-     * @return this operation instance
-     */
-    public TestNgOperation port(int port) {
-        if (port >= 1) {
-            options_.put("-port", String.valueOf(port));
-        }
+    public TestNgOperation parallel(@NonNull Parallel mechanism) {
+        Objects.requireNonNull(mechanism, "'parallel' must not be null");
+        options_.put("-parallel", mechanism.asArgument());
         return this;
     }
 
@@ -776,9 +707,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param isPropagateDataProviderFailure {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation propagateDataProviderFailureAsTestFailure(Boolean isPropagateDataProviderFailure) {
-        options_.put("-propagateDataProviderFailureAsTestFailure", String.valueOf(isPropagateDataProviderFailure));
-        return this;
+    public TestNgOperation propagateDataProviderFailureAsTestFailure(boolean isPropagateDataProviderFailure) {
+        return optBool("-propagateDataProviderFailureAsTestFailure", isPropagateDataProviderFailure);
     }
 
     /**
@@ -788,8 +718,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation reporter(String reporter) {
-        addOption("-reporter", reporter);
-        return this;
+        return opt("-reporter", reporter);
     }
 
     /**
@@ -799,105 +728,100 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation shareThreadPoolForDataProviders(boolean shareThreadPoolForDataProviders) {
-        if (shareThreadPoolForDataProviders) {
-            options_.put("-shareThreadPoolForDataProviders", "true");
-        }
-        return this;
+        return optBool("-shareThreadPoolForDataProviders", shareThreadPoolForDataProviders);
     }
 
     /**
-     * The directories where your javadoc annotated test sources are. This option is only necessary
-     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * The directories where your Javadoc annotated test sources are. This option is only necessary
+     * if you are using Javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
-     * @param directory one or more directories
+     * @param directories one or more directories
      * @return this operation instance
      * @see #sourceDir(Collection)
      */
-    public TestNgOperation sourceDir(String... directory) {
-        if (ObjectTools.isNotEmpty(directory)) {
-            return sourceDir(List.of(directory));
-        }
-        return this;
+    public TestNgOperation sourceDir(@NonNull String... directories) {
+        Objects.requireNonNull(directories, "'sourceDir' must not be null");
+        return sourceDir(List.of(directories));
     }
 
     /**
-     * The directories where your javadoc annotated test sources are. This option is only necessary
-     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * The directories where your Javadoc annotated test sources are. This option is only necessary
+     * if you are using Javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
-     * @param directory one or more directories
+     * @param directories one or more directories
      * @return this operation instance
      * @see #sourceDirFiles(Collection)
      */
-    public TestNgOperation sourceDir(File... directory) {
-        if (ObjectTools.isNotEmpty(directory)) {
-            return sourceDirFiles(List.of(directory));
-        }
-        return this;
+    public TestNgOperation sourceDir(@NonNull File... directories) {
+        Objects.requireNonNull(directories, "'sourceDir' must not be null");
+        return sourceDirFiles(List.of(directories));
     }
 
     /**
-     * The directories where your javadoc annotated test sources are. This option is only necessary
-     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * The directories where your Javadoc annotated test sources are. This option is only necessary
+     * if you are using Javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
-     * @param directory one or more directories
+     * @param directories one or more directories
      * @return this operation instance
      * @see #sourceDirPaths(Collection)
      */
-    public TestNgOperation sourceDir(Path... directory) {
-        if (ObjectTools.isNotEmpty(directory)) {
-            return sourceDirPaths(List.of(directory));
-        }
-        return this;
+    public TestNgOperation sourceDir(@NonNull Path... directories) {
+        Objects.requireNonNull(directories, "'sourceDir' must not be null");
+        return sourceDirPaths(List.of(directories));
     }
 
     /**
-     * The directories where your javadoc annotated test sources are. This option is only necessary
-     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * The directories where your Javadoc annotated test sources are. This option is only necessary
+     * if you are using Javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
-     * @param directory the list of directories
+     * @param directories the list of directories
      * @return this operation instance
      * @see #sourceDir(String...)
      */
-    public TestNgOperation sourceDir(Collection<String> directory) {
-        if (ObjectTools.isNotEmpty(directory)) {
-            options_.put("-sourcedir", String.join(";", filterBlanks(directory)));
-        }
+    public TestNgOperation sourceDir(@NonNull Collection<String> directories) {
+        ObjectTools.requireAllNotEmpty(directories, "'sourceDir' and its elements must not be null or empty");
+        options_.put("-sourcedir", String.join(";", directories));
         return this;
     }
 
     /**
-     * The directories where your javadoc annotated test sources are. This option is only necessary
-     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * The directories where your Javadoc annotated test sources are. This option is only necessary
+     * if you are using Javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
-     * @param directory the list of directories
+     * @param directories the list of directories
      * @return this operation instance
      * @see #sourceDir(File...)
      */
-    public TestNgOperation sourceDirFiles(Collection<File> directory) {
-        if (ObjectTools.isNotEmpty(directory)) {
-            return sourceDir(directory.stream().map(File::getAbsolutePath).toList());
-        }
+    public TestNgOperation sourceDirFiles(@NonNull Collection<File> directories) {
+        ObjectTools.requireAllNotEmpty(directories,
+                "'sourceDirFiles' and its elements must not be null or empty");
+        options_.put("-sourcedir",
+                directories.stream().map(File::getAbsolutePath).collect(Collectors.joining(";")));
         return this;
     }
 
     /**
-     * The directories where your javadoc annotated test sources are. This option is only necessary
-     * if you are using javadoc type annotations. (e.g. {@code "src/test"} or
+     * The directories where your Javadoc annotated test sources are. This option is only necessary
+     * if you are using Javadoc type annotations. (e.g. {@code "src/test"} or
      * {@code "src/test/org/testng/eclipse-plugin", "src/test/org/testng/testng"}).
      *
-     * @param directory the list of directories
+     * @param directories the list of directories
      * @return this operation instance
      * @see #sourceDir(Path...)
      */
-    public TestNgOperation sourceDirPaths(Collection<Path> directory) {
-        if (ObjectTools.isNotEmpty(directory)) {
-            return sourceDirFiles(directory.stream().map(Path::toFile).toList());
-        }
+    public TestNgOperation sourceDirPaths(@NonNull Collection<Path> directories) {
+        ObjectTools.requireAllNotEmpty(directories,
+                "'sourceDirPaths' and its elements must not be null or empty");
+        options_.put("-sourcedir",
+                directories.stream()
+                        .map(Path::toAbsolutePath)
+                        .map(Object::toString)
+                        .collect(Collectors.joining(";")));
         return this;
     }
 
@@ -905,30 +829,26 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * Specifies the List of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
      *
-     * @param listenerToSkip the listeners to skip
+     * @param listeners the listeners to skip
      * @return this operation instance
      * @see #spiListenersToSkip(Collection) #spiListenersToSkip(Collection)
      */
-    public TestNgOperation spiListenersToSkip(String... listenerToSkip) {
-        if (ObjectTools.isNotEmpty(listenerToSkip)) {
-            return spiListenersToSkip(List.of(listenerToSkip));
-        }
-        return this;
+    public TestNgOperation spiListenersToSkip(@NonNull String... listeners) {
+        Objects.requireNonNull(listeners, "'spiListenersToSkip' must not be null");
+        return spiListenersToSkip(List.of(listeners));
     }
 
     /**
      * Specifies the List of fully qualified class names of listeners that should be skipped from being wired in via
      * Service Loaders.
      *
-     * @param listenerToSkip the listeners to skip
+     * @param listeners the listeners to skip
      * @return this operation instance
      * @see #spiListenersToSkip(String...) #spiListenersToSkip(String...)
      */
-    public TestNgOperation spiListenersToSkip(Collection<String> listenerToSkip) {
-        if (ObjectTools.isNotEmpty(listenerToSkip)) {
-            options_.put("-spilistenerstoskip", String.join(",", filterBlanks(listenerToSkip)));
-        }
-        return this;
+    public TestNgOperation spiListenersToSkip(@NonNull Collection<String> listeners) {
+        Objects.requireNonNull(listeners, "'spiListenersToSkip' must not be null");
+        return optJoin("-spilistenerstoskip", listeners);
     }
 
     /**
@@ -940,8 +860,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation suiteName(String name) {
-        addOption("-suitename", '"' + name + '"');
-        return this;
+        ObjectTools.requireNotEmpty(name, "'suiteName' must not be null or empty");
+        return opt("-suitename", '"' + name + '"');
     }
 
     /**
@@ -953,9 +873,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation suiteThreadPoolSize(int poolSize) {
-        if (poolSize >= 0) {
-            options_.put("-suitethreadpoolsize", String.valueOf(poolSize));
+        if (poolSize < 0) {
+            throw new IllegalArgumentException("'suiteThreadPoolSize' must be >= 0");
         }
+        options_.put("-suitethreadpoolsize", String.valueOf(poolSize));
         return this;
     }
 
@@ -964,15 +885,13 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * <p>For example: {@code "testng.xml", "testng2.xml"}</p>
      *
-     * @param suite one or more suites
+     * @param suites one or more suites
      * @return this operation instance
-     * @see #suites(Collection) #suites(Collection)
+     * @see #suites(Collection)
      */
-    public TestNgOperation suites(String... suite) {
-        if (ObjectTools.isNotEmpty(suite)) {
-            return suites(List.of(suite));
-        }
-        return this;
+    public TestNgOperation suites(@NonNull String... suites) {
+        ObjectTools.requireAllNotEmpty(suites, "'suites' and its elements must not be null or empty");
+        return suites(List.of(suites));
     }
 
     /**
@@ -980,14 +899,14 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * <p>For example: {@code "testng.xml", "testng2.xml"}</p>
      *
-     * @param suite the list of suites
+     * @param suites the list of suites
      * @return this operation instance
-     * @see #suites(String...) #suites(String...)
+     * @see #suites(String...)
      */
-    public TestNgOperation suites(Collection<String> suite) {
-        if (ObjectTools.isNotEmpty(suite)) {
-            suites_.addAll(filterBlanks(suite));
-        }
+    public TestNgOperation suites(@NonNull Collection<String> suites) {
+        ObjectTools.requireAllNotEmpty(suites, "'suites' and its elements must not be null or empty");
+        suites_.clear();
+        suites_.addAll(suites);
         return this;
     }
 
@@ -996,7 +915,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of suites
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> suites() {
         return suites_;
     }
@@ -1006,15 +924,13 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * <p>For example: {@code "org.foo.Test1","org.foo.test2"}</p>
      *
-     * @param aClass one or more classes
+     * @param classes one or more classes
      * @return this operation instance
-     * @see #testClass(Collection) #testClass(Collection)
+     * @see #testClass(Collection)
      */
-    public TestNgOperation testClass(String... aClass) {
-        if (ObjectTools.isNotEmpty(aClass)) {
-            return testClass(List.of(aClass));
-        }
-        return this;
+    public TestNgOperation testClass(@NonNull String... classes) {
+        Objects.requireNonNull(classes, "'testClass' must not be null");
+        return testClass(List.of(classes));
     }
 
     /**
@@ -1022,42 +938,55 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * <p>For example: {@code "org.foo.Test1","org.foo.test2"}</p>
      *
-     * @param aClass the list of classes
+     * @param classes the list of classes
      * @return this operation instance
-     * @see #testClass(String...) #testClass(String...)
+     * @see #testClass(String...)
      */
-    public TestNgOperation testClass(Collection<String> aClass) {
-        if (ObjectTools.isNotEmpty(aClass)) {
-            testClasses_.addAll(filterBlanks(aClass));
-        }
+    public TestNgOperation testClass(@NonNull Collection<String> classes) {
+        ObjectTools.requireAllNotEmpty(classes, "`testClass` and its elements must not be null or empty");
+        testClasses_.clear();
+        testClasses_.addAll(classes);
         return this;
+    }
+
+    /**
+     * Returns the test classes to run.
+     *
+     * @return the set of test classes
+     */
+    public Set<String> testClasses() {
+        return testClasses_;
     }
 
     /**
      * Specifies the classpath entries used to run tests.
      *
-     * @param entry one or more entries
+     * <p>Replaces default classpath. Include the build {@link rife.bld.BaseProject#buildMainDirectory() main} and
+     * {@link rife.bld.BaseProject#buildTestDirectory() test} directories compiled classes are needed.</p>
+     *
+     * @param entries one or more entries
      * @return this operation instance
-     * @see #testClasspath(String...) #testClasspath(String...)
+     * @see #testClasspath(String...)
      */
-    public TestNgOperation testClasspath(String... entry) {
-        if (ObjectTools.isNotEmpty(entry)) {
-            return testClasspath(List.of(entry));
-        }
-        return this;
+    public TestNgOperation testClasspath(@NonNull String... entries) {
+        Objects.requireNonNull(entries, "`testClasspath` must not be null");
+        return testClasspath(List.of(entries));
     }
 
     /**
      * Specifies the classpath entries used to run tests.
      *
-     * @param entry the list of entries
+     * <p>Replaces default classpath. Include the build {@link rife.bld.BaseProject#buildMainDirectory() main} and
+     * {@link rife.bld.BaseProject#buildTestDirectory() test} directories compiled classes are needed.</p>
+     *
+     * @param entries the list of entries
      * @return this operation instance
-     * @see #testClasspath(String...) #testClasspath(String...)
+     * @see #testClasspath(String...)
      */
-    public TestNgOperation testClasspath(Collection<String> entry) {
-        if (ObjectTools.isNotEmpty(entry)) {
-            testClasspath_.addAll(filterBlanks(entry));
-        }
+    public TestNgOperation testClasspath(@NonNull Collection<String> entries) {
+        ObjectTools.requireAllNotEmpty(entries, "`testClasspath` and its elements must not be null or empty");
+        testClasspath_.clear();
+        testClasspath_.addAll(entries);
         return this;
     }
 
@@ -1066,7 +995,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of test classpath
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> testClasspath() {
         return testClasspath_;
     }
@@ -1080,9 +1008,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param jar the jar
      * @return this operation instance
      */
-    public TestNgOperation testJar(String jar) {
-        addOption("-testjar", jar);
-        return this;
+    public TestNgOperation testJar(@NonNull String jar) {
+        return opt("-testjar", jar);
     }
 
     /**
@@ -1093,9 +1020,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param name the name
      * @return this operation instance
      */
-    public TestNgOperation testName(String name) {
-        addOption("-testname", name);
-        return this;
+    public TestNgOperation testName(@NonNull String name) {
+        return opt("-testname", name);
     }
 
     /**
@@ -1103,7 +1029,6 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      *
      * @return the set of test names
      */
-    @SuppressFBWarnings("EI_EXPOSE_REP")
     public Set<String> testNames() {
         return testNames_;
     }
@@ -1111,28 +1036,26 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
     /**
      * Only tests defined in a {@code <test>} tag matching one of these names will be run.
      *
-     * @param name one or more names
+     * @param names one or more names
      * @return this operation instance
      * @see #testNames(Collection) #testNames(Collection)
      */
-    public TestNgOperation testNames(String... name) {
-        if (ObjectTools.isNotEmpty(name)) {
-            return testNames(List.of(name));
-        }
-        return this;
+    public TestNgOperation testNames(@NonNull String... names) {
+        Objects.requireNonNull(names, "`testNames` must not be null");
+        return testNames(List.of(names));
     }
 
     /**
      * Only tests defined in a {@code <test>} tag matching one of these names will be run.
      *
-     * @param name the list of names
+     * @param names the list of names
      * @return this operation instance
      * @see #testName(String) #testName(String)
      */
-    public TestNgOperation testNames(Collection<String> name) {
-        if (ObjectTools.isNotEmpty(name)) {
-            testNames_.addAll(filterBlanks(name));
-        }
+    public TestNgOperation testNames(@NonNull Collection<String> names) {
+        ObjectTools.requireAllNotEmpty(names, "`testNames` and its elements must not be null or empty");
+        testNames_.clear();
+        testNames_.addAll(names);
         return this;
     }
 
@@ -1142,9 +1065,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param factory the factory
      * @return this operation instance
      */
-    public TestNgOperation testRunFactory(String factory) {
-        addOption("-testrunfactory", factory);
-        return this;
+    public TestNgOperation testRunFactory(@NonNull String factory) {
+        return opt("-testrunfactory", factory);
     }
 
     /**
@@ -1159,9 +1081,10 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation threadCount(int count) {
-        if (count >= 0) {
-            options_.put("-threadcount", String.valueOf(count));
+        if (count < 0) {
+            throw new IllegalArgumentException("threadCount must be >= 0");
         }
+        options_.put("-threadcount", String.valueOf(count));
         return this;
     }
 
@@ -1171,9 +1094,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param factoryClass the factory class
      * @return this operation instance
      */
-    public TestNgOperation threadPoolFactoryClass(String factoryClass) {
-        addOption("-threadpoolfactoryclass", factoryClass);
-        return this;
+    public TestNgOperation threadPoolFactoryClass(@NonNull String factoryClass) {
+        return opt("-threadpoolfactoryclass", factoryClass);
     }
 
     /**
@@ -1184,9 +1106,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param isDefaultListener {@code true} or {@code false}
      * @return this operation instance
      */
-    public TestNgOperation useDefaultListeners(Boolean isDefaultListener) {
-        options_.put("-usedefaultlisteners", String.valueOf(isDefaultListener));
-        return this;
+    public TestNgOperation useDefaultListeners(boolean isDefaultListener) {
+        return optBool("-usedefaultlisteners", isDefaultListener);
     }
 
     /**
@@ -1196,10 +1117,7 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @return this operation instance
      */
     public TestNgOperation useGlobalThreadPool(boolean useGlobalThreadPool) {
-        if (useGlobalThreadPool) {
-            options_.put("-useGlobalThreadPool", "true");
-        }
-        return this;
+        return optBool("-useGlobalThreadPool", useGlobalThreadPool);
     }
 
     /**
@@ -1224,9 +1142,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param path the path
      * @return this operation instance
      */
-    public TestNgOperation xmlPathInJar(String path) {
-        addOption("-xmlpathinjar", path);
-        return this;
+    public TestNgOperation xmlPathInJar(@NonNull String path) {
+        return opt("-xmlpathinjar", path);
     }
 
     /**
@@ -1240,7 +1157,8 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param path the path
      * @return this operation instance
      */
-    public TestNgOperation xmlPathInJar(File path) {
+    public TestNgOperation xmlPathInJar(@NonNull File path) {
+        Objects.requireNonNull(path, "The XML path in jar must not be null");
         return xmlPathInJar(path.getAbsolutePath());
     }
 
@@ -1255,86 +1173,126 @@ public class TestNgOperation extends TestOperation<TestNgOperation, List<String>
      * @param path the path
      * @return this operation instance
      */
-    public TestNgOperation xmlPathInJar(Path path) {
+    public TestNgOperation xmlPathInJar(@NonNull Path path) {
+        Objects.requireNonNull(path, "The XML path in jar must not be null");
         return xmlPathInJar(path.toFile());
     }
 
-    private void addOption(String key, String value) {
-        if (TextTools.isNotBlank(value)) {
-            options_.put(key, value);
-        }
+    // -key -> key
+    private String normalizeKey(@NonNull String key) {
+        return key.startsWith("-") ? key.substring(1) : key;
     }
 
-    private List<String> filterBlanks(Collection<String> items) {
-        return items.stream().filter(TextTools::isNotBlank).toList();
+    // Stores a non-blank string option.
+    private TestNgOperation opt(String key, String value) {
+        ObjectTools.requireNotEmpty(key, "'%s' must not be null or empty", normalizeKey(key));
+        options_.put(key, value);
+        return this;
+    }
+
+    // Stores a boolean option unconditionally.
+    private TestNgOperation optBool(String key, boolean value) {
+        options_.put(key, Boolean.toString(value));
+        return this;
+    }
+
+    // Joins a non-empty collection into a comma-separated option.
+    private TestNgOperation optJoin(String key, Collection<String> values) {
+        ObjectTools.requireAllNotEmpty(values,
+                "'%s' and its elements must not be null or empty", normalizeKey(key));
+        options_.put(key, String.join(",", values));
+        return this;
     }
 
     /**
-     * Create a test file and delete it on exit.
+     * Returns the target collection for a given bld command-line argument prefix, or
+     * {@link Optional#empty()} if the argument is not a recognized flag.
+     */
+    private Optional<Set<String>> targetCollectionForArg(String arg) {
+        if (arg.startsWith("-suites=")) {
+            return Optional.of(suites_);
+        }
+        if (arg.startsWith("-testclass=")) {
+            return Optional.of(testClasses_);
+        }
+        if (arg.startsWith("-testnames=")) {
+            return Optional.of(testNames_);
+        }
+        if (arg.startsWith("-methods=")) {
+            return Optional.of(methods_);
+        }
+        if (arg.startsWith("-groups=")) {
+            return Optional.of(groups_);
+        }
+        if (arg.startsWith("-excludegroups=")) {
+            return Optional.of(excludeGroups_);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Writes a default testng.xml to build directory when no suites/methods/classes specified.
      *
-     * @return this operation instance
+     * @return the generated file
      */
-    private File tempFile() throws IOException {
-        var temp = File.createTempFile("testng", ".xml");
-        temp.deleteOnExit();
-        return temp;
-    }
-
-    @SuppressFBWarnings("PATH_TRAVERSAL_IN")
-    private File writeDefaultSuite() throws IOException {
-        var temp = tempFile();
-        try (var bufWriter = Files.newBufferedWriter(Paths.get(temp.getPath()))) {
-            var xml = new StringBuilder(512);
-
-            xml.append("""
-                    <?xml version="1.0" encoding="UTF-8"?>
-                    <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-                    <suite name="bld Default Suite" verbose="2">
-                    <test name="All Packages">
-                    <packages>""");
-
-            for (var p : packages_) {
-                xml.append("<package name=\"")
-                        .append(p)
-                        .append("\"/>");
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
+    private Path writeDefaultSuite() throws IOException {
+        var temp = Path.of(project_.buildDirectory().getAbsolutePath(), "testng-generated.xml");
+        try (var fos = Files.newOutputStream(temp)) {
+            var writer = XML_FACTORY.createXMLStreamWriter(fos, "UTF-8");
+            try (var ignored = (AutoCloseable) writer::close) {
+                writer.writeStartDocument("UTF-8", "1.0");
+                writer.writeDTD("<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">");
+                writer.writeStartElement("suite");
+                writer.writeAttribute("name", "bld Default Suite");
+                writer.writeAttribute("verbose", "2");
+                writer.writeStartElement("test");
+                writer.writeAttribute("name", "All Packages");
+                writer.writeStartElement("packages");
+                for (var p : packages_) {
+                    writer.writeEmptyElement("package");
+                    writer.writeAttribute("name", p);
+                }
+                writer.writeEndElement(); // packages
+                writer.writeEndElement(); // test
+                writer.writeEndElement(); // suite
+                writer.writeEndDocument();
             }
-
-            xml.append("</packages></test></suite>");
-
-            bufWriter.write(xml.toString());
+        } catch (Exception e) {
+            throw new IOException("Failed to write default testng suite file", e);
         }
         return temp;
-    }
-
-    /**
-     * Parallel Mechanisms
-     */
-    public enum Parallel {
-        /**
-         * Methods mechanism.
-         */
-        METHODS,
-        /**
-         * Tests mechanism.
-         */
-        TESTS,
-        /**
-         * Classes mechanism.
-         */
-        CLASSES
     }
 
     /**
      * Failure Policies
      */
     public enum FailurePolicy {
-        /**
-         * Skip failure policy.
-         */
         SKIP,
+        CONTINUE;
+
         /**
-         * Continue failure policy.
+         * Returns the TestNG command line argument value.
+         *
+         * @return the argument value
          */
-        CONTINUE
+        public String asArgument() {
+            return name().toLowerCase(Locale.ROOT);
+        }
+    }
+
+    public enum Parallel {
+        METHODS,
+        TESTS,
+        CLASSES;
+
+        /**
+         * Returns the TestNG command line argument value.
+         *
+         * @return the argument value
+         */
+        public String asArgument() {
+            return name().toLowerCase(Locale.ROOT);
+        }
     }
 }
