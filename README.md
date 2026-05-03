@@ -28,10 +28,10 @@ public void test() throws Exception {
             .execute();
 }
 ```
+
 - [View Example Project](https://github.com/rife2/bld-testng/tree/master/examples/example-project)
 
-
-or if using [BaseProject](https://rife2.github.io/bld/rife/bld/BaseProject.html): 
+or if using [BaseProject](https://rife2.github.io/bld/rife/bld/BaseProject.html):
 
 ```java
 @Override
@@ -41,6 +41,7 @@ public TestOperation<?, ?> testOperation() {
             .packages("com.example");
 }
 ```
+
 - [View Example Project](https://github.com/rife2/bld-testng/tree/master/examples/example-baseproject)
 
 To run tests:
@@ -48,6 +49,7 @@ To run tests:
 ```console
 ./bld compile test
 
+./bld compile test -suites=sample-testng.xml
 ./bld compile test -testclass=com.example.Test,com.sample.Test
 ./bld compile test -methods=com.example.Test.foo,com.example.Test.bar
 ./bld compile test -testnames=Test1,Test2
@@ -55,7 +57,6 @@ To run tests:
 ./bld compile test -excludegroups=group1,group3
 ./bld compile test -log=5
 ```
-
 
 Please check the [TestNgOperation documentation](https://rife2.github.io/bld-testng/rife/bld/extension/TestNgOperation.html#method-summary) for all available configuration options.
 
